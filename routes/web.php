@@ -1,6 +1,8 @@
 <?php
 namespace App\Http\Controllers;
+use App\Models\Slideshow;
 use Illuminate\Support\Facades\Route;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -15,6 +17,15 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::get('/', function () {
+    // Kunin lang ang mga active at ayon sa pagkakasunod-sunod
+    $slides = Slideshow::where('is_active', true)
+                       ->orderBy('order', 'asc')
+                       ->get();
+
+    return view('public', compact('slides'));
 });
 
 // 1. The Login Page

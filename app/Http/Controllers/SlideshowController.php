@@ -4,24 +4,35 @@ namespace App\Http\Controllers;
 
 use App\Models\Slideshow;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SlideshowController extends Controller
 {
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'image' => 'required|image|mimes:jpeg,png,jpg|max:2048', // 2MB Max
-        ]);
+   public function store(Request $request)
+{
+    // 1. Validate the array of images
+    $request->validate([
+        'images' => 'required',
+        'images.*' => 'image|mimes:jpeg,png,jpg|max:2048' // Validates each file in the array
+    ]);
 
-        // Save file to storage/app/public/slides
-        $path = $request->file('image')->store('slides', 'public');
+    if ($request->hasFile('images')) {
+        foreach ($request->file('images') as $image) {
+            // 2. Generate a clean title based on the original filename
+            $title = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
+            
+            // 3. Store the file in the public 'slides' folder
+            $path = $image->store('slides', 'public');
 
-        Slideshow::create([
-            'title' => $request->title,
-            'image_path' => $path,
-        ]);
+            // 4. Create a database entry for each slide
+            \App\Models\Slideshow::create([
+                'title' => $title,
+                'image_path' => $path,
+                'is_active' => true,
+            ]);
+        }
+    }
 
-        return back()->with('status', 'Slide uploaded successfully!');
+    return back()->with('status', 'All images uploaded successfully!');
     }
 }

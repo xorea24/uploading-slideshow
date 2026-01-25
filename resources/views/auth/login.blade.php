@@ -40,16 +40,16 @@
                 </div>
 
                 <div class="mt-8 space-y-3">
-                    <button type="submit" class="w-full py-4 bg-[#0a0a14] rounded-xl font-bold text-white text-lg hover:bg-gray-800 transition">
-                        Admin Login
-                    </button>
+            <button type="submit" class="w-full py-4 bg-red-600 rounded-xl font-bold text-white text-lg hover:bg-red-700 transition shadow-lg shadow-red-200">
+                Admin Login
+            </button>
 
-                    <a href="/" class="w-full inline-flex justify-center py-4 bg-white border border-gray-200 rounded-xl font-bold text-gray-900 text-lg hover:bg-gray-50 transition">
-                        Public Access
-                    </a>
-                </div>
+            <a href="/" class="w-full inline-flex justify-center py-4 bg-white border border-gray-200 rounded-xl font-bold text-gray-900 text-lg hover:bg-gray-50 transition">
+                Public Access
+            </a>
+        </div>
             </form>
         </div>
     </div>
 </body>
-</html>
+</html>  
