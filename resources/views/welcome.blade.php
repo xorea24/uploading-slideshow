@@ -24,7 +24,7 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('login') }}">
+            <form method="POST" action="/login">
                 @csrf
 
                 <div>
@@ -33,15 +33,20 @@
                         class="block mt-2 w-full px-4 py-3 bg-[#f3f4f6] border-none rounded-xl focus:ring-2 focus:ring-gray-300">
                 </div>
 
-              <div class="mt-8 space-y-3">
-    <button type="submit" class="w-full py-4 bg-red-600 rounded-xl font-bold text-white text-lg hover:bg-red-700 transition shadow-lg shadow-red-200">
-        Admin Login
-    </button>
+                <div class="mt-6">
+                    <label class="block font-bold text-gray-900 text-lg">Password</label>
+                    <input type="password" name="password" placeholder="Enter password" required 
+                        class="block mt-2 w-full px-4 py-3 bg-[#f3f4f6] border-none rounded-xl focus:ring-2 focus:ring-gray-300">
+                </div>
 
-    <a href="/" class="w-full inline-flex justify-center py-4 bg-white border border-gray-200 rounded-xl font-bold text-gray-900 text-lg hover:bg-gray-50 transition">
-        Public Access
-    </a>
-</div>
+                        <div class="mt-8 space-y-3">
+                <button type="submit" class="w-full py-4 bg-red-600 rounded-xl font-bold text-white text-lg hover:bg-red-700 transition shadow-lg shadow-red-200">
+                    Admin Login
+                </button>
+
+                <a href="/" class="w-full inline-flex justify-center py-4 bg-white border border-gray-200 rounded-xl font-bold text-gray-900 text-lg hover:bg-gray-50 transition">
+                    Public Access
+                </a>
             </div>
                 </div>
             </form>

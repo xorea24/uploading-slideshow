@@ -13,10 +13,16 @@ class AuthController extends Controller
      */
    public function login(Request $request)
 {
-    $credentials = $request->validate([
+    $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
         'email' => ['required', 'email'],
         'password' => ['required'],
     ]);
+
+    if ($validator->fails()) {
+        return redirect('/login')->withErrors($validator)->withInput();
+    }
+
+    $credentials = $request->only('email', 'password');
 
     if (Auth::attempt($credentials)) {
         $request->session()->regenerate();
@@ -25,9 +31,9 @@ class AuthController extends Controller
         return redirect()->intended('/dashboard');
     }
 
-    return back()->withErrors([
+    return redirect('/login')->withErrors([
         'email' => 'The provided credentials do not match our records.',
-    ])->onlyInput('email');
+    ])->withInput();
 }
     /**
      * Log the user out.

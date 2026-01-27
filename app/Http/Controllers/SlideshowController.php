@@ -35,4 +35,17 @@ class SlideshowController extends Controller
 
     return back()->with('status', 'All images uploaded successfully!');
     }
+
+    public function toggle(Slideshow $slideshow)
+    {
+        $slideshow->update(['is_active' => !$slideshow->is_active]);
+        return back()->with('status', 'Slide status updated!');
+    }
+
+    public function destroy(Slideshow $slideshow)
+    {
+        Storage::disk('public')->delete($slideshow->image_path);
+        $slideshow->delete();
+        return back()->with('status', 'Slide deleted successfully!');
+    }
 }

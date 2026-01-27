@@ -16,10 +16,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::get('/', function () {
     // Kunin lang ang mga active at ayon sa pagkakasunod-sunod
     $slides = Slideshow::where('is_active', true)
                        ->orderBy('order', 'asc')
@@ -30,7 +26,7 @@ Route::get('/', function () {
 
 // 1. The Login Page
 Route::get('/login', function () {
-    return view('auth.login');
+    return view('welcome');
 })->name('login')->middleware('guest');
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -39,7 +35,12 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 
 Route::post('/slideshow', [SlideshowController::class, 'store'])->name('slideshow.store')->middleware('auth');
 
+Route::patch('/slideshow/{slideshow}/toggle', [SlideshowController::class, 'toggle'])->name('slideshow.toggle')->middleware('auth');
+
+Route::delete('/slideshow/{slideshow}', [SlideshowController::class, 'destroy'])->name('slideshow.destroy')->middleware('auth');
+
 // 3. The Dashboard (Ensure it has the 'auth' middleware)
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    $slides = Slideshow::orderBy('order', 'asc')->get();
+    return view('dashboard', compact('slides'));
 })->name('dashboard')->middleware('auth');
