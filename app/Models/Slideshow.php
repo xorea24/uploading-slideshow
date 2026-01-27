@@ -14,8 +14,8 @@ class Slideshow extends Model
      */
     protected $fillable = [
         'title',
+        'category_name',
         'image_path',
-        'order',
         'is_active',
     ];
 }

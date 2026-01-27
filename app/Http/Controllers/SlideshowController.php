@@ -12,6 +12,7 @@ class SlideshowController extends Controller
 {
     // 1. Validate the array of images
     $request->validate([
+        'category_name' => 'required|string|max:255',
         'images' => 'required',
         'images.*' => 'image|mimes:jpeg,png,jpg|max:2048' // Validates each file in the array
     ]);
@@ -26,9 +27,10 @@ class SlideshowController extends Controller
 
             // 4. Create a database entry for each slide
             \App\Models\Slideshow::create([
-                'title' => $title,
+                'title'         => $title, // <--- ADD THIS LINE TO FIX THE ERROR
                 'image_path' => $path,
                 'is_active' => true,
+                'category_name' => $request->category_name,
             ]);
         }
     }
