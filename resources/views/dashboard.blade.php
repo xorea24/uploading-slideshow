@@ -7,22 +7,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-{{-- Alpine.js data for tab management, mobile sidebar, and file listing --}}
+
 <body class="bg-gray-50 font-sans" 
     x-data="{ 
         tab: 'upload', 
         sidebarOpen: false, 
-        selectedFiles: [], 
+        selectedFiles: [],
+        settings: { timer: 5, effect: 'fade' },
         updateFileList(event) {
             const newFiles = Array.from(event.target.files || event.dataTransfer.files);
-            // Append new files to the existing array
             this.selectedFiles = [...this.selectedFiles, ...newFiles];
         },
         removeFile(index) {
             this.selectedFiles.splice(index, 1);
         },
         submitForm(e) {
-            // Create a DataTransfer object to sync our array back to the hidden input
             const dataTransfer = new DataTransfer();
             this.selectedFiles.forEach(file => dataTransfer.items.add(file));
             this.$refs.fileInput.files = dataTransfer.files;
@@ -64,6 +63,16 @@
                     </svg>
                     Manage Gallery
                 </a>
+
+                <a href="#" @click.prevent="tab = 'settings'; sidebarOpen = false" 
+                    :class="tab === 'settings' ? 'bg-red-600 text-white shadow-lg' : 'text-red-200 hover:bg-red-900'"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Settings
+                </a>
             </nav>
 
             <div class="p-4 border-t border-red-900/50">
@@ -82,7 +91,7 @@
         {{-- Main Section --}}
         <main class="flex-1 overflow-y-auto h-screen bg-gray-50">
             <header class="bg-white border-b border-gray-100 px-8 py-4 flex justify-between items-center sticky top-0 z-10">
-                <h2 class="text-xl font-bold text-gray-800" x-text="tab === 'upload' ? 'Upload Center' : 'Gallery Management'"></h2>
+                <h2 class="text-xl font-bold text-gray-800" x-text="tab === 'upload' ? 'Upload Center' : (tab === 'manage' ? 'Gallery Management' : 'System Settings')"></h2>
                 <div class="flex items-center gap-4">
                     <div class="text-right hidden sm:block">
                         <p class="text-xs font-bold text-gray-900">{{ Auth::user()->name }}</p>
@@ -98,11 +107,74 @@
                 @if (session('status'))
                     <div class="max-w-4xl mx-auto mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded-r-lg shadow-sm flex items-center justify-between">
                         <span>{{ session('status') }}</span>
-                        <button onclick="this.parentElement.remove()" class="text-green-900">&times;</button>
+                        <button @click="$el.parentElement.remove()" class="text-green-900 font-bold">&times;</button>
                     </div>
                 @endif
 
-             <div class="p-8">
+{{-- Tab: Settings --}}
+<div x-show="tab === 'settings'" x-transition:enter="transition ease-out duration-300">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+    
+
+        <form action="{{ route('settings.update') }}" method="POST" class="space-y-8">
+            @csrf
+            @php
+                // Fetch settings directly from the DB to ensure they reflect the latest save
+                $currentDuration = \DB::table('settings')->where('key', 'slide_duration')->value('value') ?? 5;
+                $currentEffect = \DB::table('settings')->where('key', 'transition_effect')->value('value') ?? 'fade';
+            @endphp
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {{-- Slide Duration --}}
+                <div class="space-y-2">
+                    <label class="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+                        Slide Duration (Seconds)
+                    </label>
+                    <div class="relative">
+                        <input type="number" 
+                               name="slide_duration" 
+                               value="{{ $currentDuration }}" 
+                               min="1" 
+                               max="60"
+                               class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none transition pr-12">
+                        <span class="absolute right-4 top-3.5 text-gray-400 text-sm font-bold">sec</span>
+                    </div>
+                    <p class="text-[10px] text-gray-400 font-medium">Controls the speed of the slideshow.</p>
+                </div>
+
+                {{-- Transition Effect --}}
+                <div class="space-y-2">
+                    <label class="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+                        Transition Effect
+                    </label>
+                    <select name="transition_effect" 
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none bg-white transition cursor-pointer">
+                        <option value="fade" {{ $currentEffect == 'fade' ? 'selected' : '' }}>Fade (Smooth)</option>
+                        <option value="slide-up" {{ $currentEffect == 'slide-up' ? 'selected' : '' }}>Slide Up</option>
+                        <option value="slide-down" {{ $currentEffect == 'slide-down' ? 'selected' : '' }}>Slide Down</option>
+                        <option value="slide-left" {{ $currentEffect == 'slide-left' ? 'selected' : '' }}>Slide Left</option>
+                        <option value="slide-right" {{ $currentEffect == 'slide-right' ? 'selected' : '' }}>Slide Right</option>
+                        <option value="zoom" {{ $currentEffect == 'zoom' ? 'selected' : '' }}>Ken Burns (Zoom)</option>
+                    </select>
+                    <p class="text-[10px] text-gray-400 font-medium">How the images move during change.</p>
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-gray-50 flex items-center justify-between">
+                <a href="/" target="_blank" class="text-sm font-bold text-red-700 hover:underline flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Preview Slideshow
+                </a>
+                
+                <button type="submit" class="bg-red-700 text-white px-10 py-3 rounded-xl font-bold hover:bg-red-800 transition shadow-lg active:scale-95">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
                 {{-- Tab: Upload --}}
                 <div x-show="tab === 'upload'" x-transition>
                     <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
@@ -114,7 +186,6 @@
                                     class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none" required>
                             </div>
 
-                            {{-- Drop Zone --}}
                             <div id="drop-zone" 
                                 @dragover.prevent="$el.classList.add('border-red-500', 'bg-red-50')" 
                                 @dragleave.prevent="$el.classList.remove('border-red-500', 'bg-red-50')"
@@ -128,10 +199,8 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                     </svg>
                                     <span class="text-red-600 font-bold">Select Photos</span> or drag and drop
-                                    <p class="text-xs text-gray-400 mt-2">You can click multiple times to add more photos</p>
                                 </label>
                                 
-                                {{-- File List with Remove Button --}}
                                 <div x-show="selectedFiles.length > 0" class="mt-6 p-4 bg-white rounded-xl border border-gray-100 text-left">
                                     <div class="flex justify-between items-center mb-3">
                                         <p class="text-xs font-bold text-gray-500 uppercase">Selected Files (<span x-text="selectedFiles.length"></span>)</p>
@@ -208,23 +277,5 @@
             </div>
         </main>
     </div>
-
-    <script>
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('images');
-
-        ['dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, e => e.preventDefault());
-        });
-
-        dropZone.addEventListener('dragover', () => dropZone.classList.add('border-red-500', 'bg-red-50'));
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-red-500', 'bg-red-50'));
-
-        dropZone.addEventListener('drop', (e) => {
-            dropZone.classList.remove('border-red-500', 'bg-red-50');
-            fileInput.files = e.dataTransfer.files;
-            fileInput.dispatchEvent(new Event('change'));
-        });
-    </script>
 </body>
 </html>

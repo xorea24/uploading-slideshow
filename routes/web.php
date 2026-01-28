@@ -2,6 +2,9 @@
 namespace App\Http\Controllers;
 use App\Models\Slideshow;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SlideshowController; // Make sure this is at the top
+
 
 
 /*
@@ -14,6 +17,10 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+
+// Fix the settings route
+Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update')->middleware('auth');
 
 Route::get('/', function () {
     // Kunin lang ang mga active at ayon sa pagkakasunod-sunod
@@ -44,3 +51,14 @@ Route::get('/dashboard', function () {
     $slides = Slideshow::orderBy('order', 'asc')->get();
     return view('dashboard', compact('slides'));
 })->name('dashboard')->middleware('auth');
+
+Route::get('/public-slideshow', function () {
+    $slides = \App\Models\Slideshow::where('is_active', true)->get();
+    
+    // Fetch the settings or use defaults
+    $duration = \DB::table('settings')->where('key', 'slide_duration')->value('value') ?? 5;
+    $effect = \DB::table('settings')->where('key', 'transition_effect')->value('value') ?? 'fade';
+
+    return view('public-slideshow', compact('slides', 'duration', 'effect'));
+});
+

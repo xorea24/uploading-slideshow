@@ -6,26 +6,13 @@
     <title>Public Access - Mayor's Office</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     
     <style>
-        /* CSS RESET & FULLSCREEN LOGIC */
-        html, body { 
-            height: 100%; 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; /* Pinipigilan ang scrolling ng buong page */
-        }
-        
-        /* Ginagawa nating 100% ng screen height ang slider */
+        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
         .swiper { width: 100%; height: 100vh; }
-
-        /* Sinisiguro na ang image ay hindi gepay (stretched). 
-           'object-fit: cover' acts like a background-size: cover. */
         .swiper-slide img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* TITLE OVERLAY: Positioning the text box over the image */
         .title-overlay {
             position: absolute;
             bottom: 10%;
@@ -33,18 +20,23 @@
             z-index: 10;
         }
 
-        /* FLOATING ADMIN BUTTON: Naka-fixed sa top-right kahit umiikot ang slides */
         .admin-btn {
             position: absolute;
             top: 20px;
             right: 20px;
-            z-index: 20; /* Dapat mas mataas sa swiper para mapindot */
+            z-index: 20;
             background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px); /* Modern glassmorphism effect */
+            backdrop-filter: blur(5px);
         }
     </style>
 </head>
 <body class="bg-black">
+
+    {{-- Fetch Global Settings --}}
+    @php
+        $seconds = \DB::table('settings')->where('key', 'slide_duration')->value('value') ?? 5;
+        $effect = \DB::table('settings')->where('key', 'transition_effect')->value('value') ?? 'fade';
+    @endphp
 
     <a href="/login" class="admin-btn text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-white hover:text-black transition">
         Admin Login
@@ -57,18 +49,16 @@
     <div class="swiper mySwiper">
         <div class="swiper-wrapper">
         
-        {{-- LARAVEL LOOP: Kinukuha ang data mula sa database --}}
         @forelse($slides as $slide)
             <div class="swiper-slide">
-                {{-- Asset helper targets the public/storage folder --}}
                 <img src="{{ asset('storage/' . $slide->image_path) }}" alt="{{ $slide->title }}">
                 
                 <div class="title-overlay bg-black/50 text-white px-6 py-3 rounded-lg backdrop-blur-md">
                     <h2 class="text-2xl font-bold">{{ $slide->title }}</h2>
+                    <p class="text-sm text-gray-200">{{ $slide->category_name }}</p>
                 </div>
             </div>
         @empty
-            {{-- FALLBACK: Kung walang data sa database, ito ang lalabas --}}
             <div class="swiper-slide flex items-center justify-center bg-gray-900 text-white">
                 <p>No images available in the gallery.</p>
             </div>
@@ -76,35 +66,64 @@
         </div>
 
         <div class="swiper-pagination"></div>
-        <div class="swiper-button-next !text-white"></div> <div class="swiper-button-prev !text-white"></div>
+        <div class="swiper-button-next !text-white"></div> 
+        <div class="swiper-button-prev !text-white"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
     <script>
-    // INITIALIZE SWIPER
-    var swiper = new Swiper(".mySwiper", {
-        loop: true,        // Babalik sa simula kapag natapos ang slides
-        speed: 1000,       // Duration ng transition (1 second)
-        
-        autoplay: { 
-            delay: 2000,              // 2 seconds na display bawat slide
-            disableOnInteraction: false, // Kahit pindutin ng user, itutuloy pa rin ang pag-ikot
-            pauseOnMouseEnter: false,   // Hindi titigil kahit itapat ang mouse cursor
-        },
+        // 1. Get Settings from PHP
+        const slideDuration = {{ $seconds }} * 1000; 
+        const effectSetting = "{{ $effect }}";
 
-        // Enable navigation dots
-        pagination: { 
-            el: ".swiper-pagination", 
-            clickable: true 
-        },
+        // 2. Build Swiper Options
+        let swiperOptions = {
+            loop: true,
+            speed: 1000,
+            autoplay: {
+                delay: slideDuration,
+                disableOnInteraction: false,
+            },
+            pagination: { el: ".swiper-pagination", clickable: true },
+            navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
+        };
 
-        // Enable next/prev arrows
-        navigation: { 
-            nextEl: ".swiper-button-next", 
-            prevEl: ".swiper-button-prev" 
-        },
-    });
+     // 3. Apply the Effect based on Admin choice
+if (effectSetting === 'fade') {
+    swiperOptions.effect = 'fade';
+    swiperOptions.fadeEffect = { crossFade: true };
+} 
+else if (effectSetting === 'slide-up') {
+    swiperOptions.direction = 'vertical';
+} 
+else if (effectSetting === 'slide-down') {
+    swiperOptions.direction = 'vertical';
+    swiperOptions.effect = 'creative';
+    swiperOptions.creativeEffect = {
+        prev: { translate: [0, '100%', 0] },
+        next: { translate: [0, '-100%', 0] },
+    };
+}
+else if (effectSetting === 'slide-left') {
+    swiperOptions.direction = 'horizontal'; // Standard behavior
+}
+else if (effectSetting === 'slide-right') {
+    swiperOptions.direction = 'horizontal';
+    swiperOptions.effect = 'creative';
+    swiperOptions.creativeEffect = {
+        prev: { translate: ['100%', 0, 0] },
+        next: { translate: ['-100%', 0, 0] },
+    };
+}
+        else if (effectSetting === 'zoom') {
+            swiperOptions.effect = 'fade';
+            // Subtle zoom effect via CSS
+            document.styleSheets[0].insertRule('.swiper-slide-active img { transform: scale(1.1); transition: transform ' + slideDuration + 'ms linear; }', 0);
+        }
+
+        // 4. Initialize
+        var swiper = new Swiper(".mySwiper", swiperOptions);
     </script>
 </body>
 </html>
