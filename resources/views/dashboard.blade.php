@@ -190,8 +190,7 @@
                                 @dragover.prevent="$el.classList.add('border-red-500', 'bg-red-50')" 
                                 @dragleave.prevent="$el.classList.remove('border-red-500', 'bg-red-50')"
                                 @drop.prevent="$el.classList.remove('border-red-500', 'bg-red-50'); updateFileList($event)"
-                                class="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center hover:border-red-400 transition cursor-pointer bg-gray-50 relative">
-                                
+
                                 <input type="file" name="images[]" id="images" x-ref="fileInput" multiple class="hidden" @change="updateFileList($event)">
                                 
                                 <label for="images" class="cursor-pointer">
