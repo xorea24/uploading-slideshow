@@ -44,25 +44,40 @@
                 <h1 class="text-2xl font-bold tracking-wider uppercase">Mayor's <span class="text-red-400">Office</span></h1>
                 <p class="text-[10px] text-red-300 tracking-[0.2em] mt-1">UPLOADING SYSTEM</p>
             </div>
+
+            
             
             <nav class="flex-1 px-4 space-y-2 mt-4">
+              <a href="#" @click.prevent="tab = 'manage'; sidebarOpen = false" 
+                    :class="tab === 'manage' ? 'bg-red-600 text-white shadow-lg' : 'text-red-200 hover:bg-red-900'"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    Albums
+                </a>
+
+
                 <a href="#" @click.prevent="tab = 'upload'; sidebarOpen = false" 
                     :class="tab === 'upload' ? 'bg-red-600 text-white shadow-lg' : 'text-red-200 hover:bg-red-900'"
                     class="flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                     </svg>
-                    Upload Center
+                    Upload 
                 </a>
 
-                <a href="#" @click.prevent="tab = 'manage'; sidebarOpen = false" 
-                    :class="tab === 'manage' ? 'bg-red-600 text-white shadow-lg' : 'text-red-200 hover:bg-red-900'"
+
+                <a href="#" @click.prevent="tab = 'trash'; sidebarOpen = false" 
+                    :class="tab === 'trash' ? 'bg-red-600 text-white shadow-lg' : 'text-red-200 hover:bg-red-900'"
                     class="flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    Manage Gallery
-                </a>
+                    Recycle Bin
+                  <span class="ml-auto bg-white text-red-950 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                        {{ \App\Models\Slideshow::onlyTrashed()->count() }}
+                  </span>
 
                 <a href="#" @click.prevent="tab = 'settings'; sidebarOpen = false" 
                     :class="tab === 'settings' ? 'bg-red-600 text-white shadow-lg' : 'text-red-200 hover:bg-red-900'"
@@ -91,7 +106,9 @@
         {{-- Main Section --}}
         <main class="flex-1 overflow-y-auto h-screen bg-gray-50">
             <header class="bg-white border-b border-gray-100 px-8 py-4 flex justify-between items-center sticky top-0 z-10">
-                <h2 class="text-xl font-bold text-gray-800" x-text="tab === 'upload' ? 'Upload Center' : (tab === 'manage' ? 'Gallery Management' : 'System Settings')"></h2>
+                <h2 class="text-xl font-bold text-gray-800" 
+                    x-text="tab === 'upload' ? 'Upload' : (tab === 'manage' ? 'Albums  Management' : (tab === 'trash' ? 'Recycle Bin' : 'System Settings'))">
+                </h2>
                 <div class="flex items-center gap-4">
                     <div class="text-right hidden sm:block">
                         <p class="text-xs font-bold text-gray-900">{{ Auth::user()->name }}</p>
@@ -111,77 +128,13 @@
                     </div>
                 @endif
 
-{{-- Tab: Settings --}}
-<div x-show="tab === 'settings'" x-transition:enter="transition ease-out duration-300">
-    <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-    
-
-        <form action="{{ route('settings.update') }}" method="POST" class="space-y-8">
-            @csrf
-            @php
-                // Fetch settings directly from the DB to ensure they reflect the latest save
-                $currentDuration = \DB::table('settings')->where('key', 'slide_duration')->value('value') ?? 5;
-                $currentEffect = \DB::table('settings')->where('key', 'transition_effect')->value('value') ?? 'fade';
-            @endphp
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {{-- Slide Duration --}}
-                <div class="space-y-2">
-                    <label class="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                        Slide Duration (Seconds)
-                    </label>
-                    <div class="relative">
-                        <input type="number" 
-                               name="slide_duration" 
-                               value="{{ $currentDuration }}" 
-                               min="1" 
-                               max="60"
-                               class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none transition pr-12">
-                        <span class="absolute right-4 top-3.5 text-gray-400 text-sm font-bold">sec</span>
-                    </div>
-                    <p class="text-[10px] text-gray-400 font-medium">Controls the speed of the slideshow.</p>
-                </div>
-
-                {{-- Transition Effect --}}
-                <div class="space-y-2">
-                    <label class="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                        Transition Effect
-                    </label>
-                    <select name="transition_effect" 
-                            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none bg-white transition cursor-pointer">
-                        <option value="fade" {{ $currentEffect == 'fade' ? 'selected' : '' }}>Fade (Smooth)</option>
-                        <option value="slide-up" {{ $currentEffect == 'slide-up' ? 'selected' : '' }}>Slide Up</option>
-                        <option value="slide-down" {{ $currentEffect == 'slide-down' ? 'selected' : '' }}>Slide Down</option>
-                        <option value="slide-left" {{ $currentEffect == 'slide-left' ? 'selected' : '' }}>Slide Left</option>
-                        <option value="slide-right" {{ $currentEffect == 'slide-right' ? 'selected' : '' }}>Slide Right</option>
-                        <option value="zoom" {{ $currentEffect == 'zoom' ? 'selected' : '' }}>Ken Burns (Zoom)</option>
-                    </select>
-                    <p class="text-[10px] text-gray-400 font-medium">How the images move during change.</p>
-                </div>
-            </div>
-
-            <div class="pt-6 border-t border-gray-50 flex items-center justify-between">
-                <a href="/" target="_blank" class="text-sm font-bold text-red-700 hover:underline flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    Preview Slideshow
-                </a>
-                
-                <button type="submit" class="bg-red-700 text-white px-10 py-3 rounded-xl font-bold hover:bg-red-800 transition shadow-lg active:scale-95">
-                    Save Changes
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
                 {{-- Tab: Upload --}}
                 <div x-show="tab === 'upload'" x-transition>
                     <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                         <form action="{{ route('slideshow.store') }}" method="POST" enctype="multipart/form-data" @submit="submitForm" class="space-y-6">
                             @csrf
                             <div class="space-y-2">
-                                <label class="block text-sm font-bold text-gray-700 uppercase tracking-wide">Category Name / Event Title</label>
+                                <label class="block text-sm font-bold text-gray-70f0 uppercase tracking-wide">Albums name </label>
                                 <input type="text" name="category_name" placeholder="e.g. Mayor's Cup 2024" 
                                     class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none" required>
                             </div>
@@ -272,6 +225,99 @@
                                 <p class="text-gray-400">No photos found in the system.</p>
                             </div>
                         @endforelse
+                    </div>
+                </div>
+
+                {{-- Tab: Trash --}}
+                <div x-show="tab === 'trash'" x-transition:enter="transition ease-out duration-300">
+                    <div class="max-w-6xl mx-auto space-y-6">
+                        <div class="bg-red-50 p-4 rounded-xl border border-red-100 flex items-center justify-between">
+                            <p class="text-sm text-red-800 font-medium italic">Deleted items are kept here. Restore them to put them back in the gallery.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            @forelse(\App\Models\Slideshow::onlyTrashed()->get() as $trash)
+                                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm group">
+                                    <div class="relative">
+                                        <img src="{{ asset('storage/' . $trash->image_path) }}" class="w-full h-32 object-cover opacity-60 grayscale group-hover:grayscale-0 transition">
+                                        <div class="absolute top-2 left-2">
+                                            <span class="bg-red-600 text-white text-[8px] font-bold px-2 py-1 rounded-full uppercase">Deleted</span>
+                                        </div>
+                                    </div>
+                                    <div class="p-3">
+                                        <p class="text-[10px] font-bold text-gray-400 uppercase truncate mb-3">{{ $trash->category_name }}</p>
+                                        <div class="flex gap-2">
+                                            <form action="{{ route('slideshow.restore', $trash->id) }}" method="POST" class="flex-1">
+                                                @csrf @method('PATCH')
+                                                <button class="w-full py-1.5 bg-green-600 text-white text-[10px] font-bold rounded-lg hover:bg-green-700 transition">RESTORE</button>
+                                            </form>
+                                            <form action="{{ route('slideshow.force-delete', $trash->id) }}" method="POST" onsubmit="return confirm('Permanently delete this file? This cannot be undone.')">
+                                                @csrf @method('DELETE')
+                                                <button class="p-1.5 text-red-500 hover:bg-red-50 border border-red-100 rounded-lg transition">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="col-span-full text-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-100">
+                                    <p class="text-gray-400 font-medium">The Recycle Bin is empty.</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Tab: Settings --}}
+                <div x-show="tab === 'settings'" x-transition:enter="transition ease-out duration-300">
+                    <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                        <form action="{{ route('settings.update') }}" method="POST" class="space-y-8">
+                            @csrf
+                            @php
+                                $currentDuration = \DB::table('settings')->where('key', 'slide_duration')->value('value') ?? 5;
+                                $currentEffect = \DB::table('settings')->where('key', 'transition_effect')->value('value') ?? 'fade';
+                            @endphp
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-bold text-gray-700 uppercase tracking-wide">Slide Duration (Seconds)</label>
+                                    <div class="relative">
+                                        <input type="number" name="slide_duration" value="{{ $currentDuration }}" min="1" max="60"
+                                               class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none transition pr-12">
+                                        <span class="absolute right-4 top-3.5 text-gray-400 text-sm font-bold">sec</span>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 font-medium">Controls the speed of the slideshow.</p>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-bold text-gray-700 uppercase tracking-wide">Transition Effect</label>
+                                    <select name="transition_effect" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none bg-white transition cursor-pointer">
+                                        <option value="fade" {{ $currentEffect == 'fade' ? 'selected' : '' }}>Fade (Smooth)</option>
+                                        <option value="slide-up" {{ $currentEffect == 'slide-up' ? 'selected' : '' }}>Slide Up</option>
+                                        <option value="slide-down" {{ $currentEffect == 'slide-down' ? 'selected' : '' }}>Slide Down</option>
+                                        <option value="slide-left" {{ $currentEffect == 'slide-left' ? 'selected' : '' }}>Slide Left</option>
+                                        <option value="slide-right" {{ $currentEffect == 'slide-right' ? 'selected' : '' }}>Slide Right</option>
+                                        <option value="zoom" {{ $currentEffect == 'zoom' ? 'selected' : '' }}>Ken Burns (Zoom)</option>
+                                    </select>
+                                    <p class="text-[10px] text-gray-400 font-medium">How the images move during change.</p>
+                                </div>
+                            </div>
+
+                            <div class="pt-6 border-t border-gray-50 flex items-center justify-between">
+                                <a href="/" target="_blank" class="text-sm font-bold text-red-700 hover:underline flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                    Preview Slideshow
+                                </a>
+                                <button type="submit" class="bg-red-700 text-white px-10 py-3 rounded-xl font-bold hover:bg-red-800 transition shadow-lg active:scale-95">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
