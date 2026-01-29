@@ -38,12 +38,9 @@
         $effect = \DB::table('settings')->where('key', 'transition_effect')->value('value') ?? 'fade';
     @endphp
 
-    <a href="/login" class="admin-btn text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-white hover:text-black transition">
-        Admin Login
-    </a>
-
     <div class="absolute top-5 left-5 z-20 pointer-events-none">
         <h1 class="text-white text-3xl font-bold drop-shadow-lg">Mayor's Office Gallery</h1>
+        <p class="text-white text-sm drop-shadow-lg">Enjoy the slideshow of our city's highlights</p>
     </div>
 
     <div class="swiper mySwiper">

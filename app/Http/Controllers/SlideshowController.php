@@ -9,6 +9,18 @@ use Illuminate\Support\Facades\DB;
 
 class SlideshowController extends Controller
 {
+
+
+    public function index()
+{
+    $slides = Slideshow::all();
+    
+    // Fetch count of soft-deleted items
+    $trashCount = Slideshow::onlyTrashed()->count();
+    // .env value
+
+    return view('admin.dashboard', compact('slides', 'trashCount'));
+}
     /**
      * Upload and store multiple images
      */
@@ -38,7 +50,7 @@ class SlideshowController extends Controller
     }
 
     /**
-     * Toggle the visibility of a slide
+     * Toggle visibility
      */
     public function toggle(Slideshow $slideshow)
     {
@@ -47,17 +59,48 @@ class SlideshowController extends Controller
     }
 
     /**
-     * Delete a slide and its image file
+     * SOFT DELETE: Move to Trash
      */
     public function destroy(Slideshow $slideshow)
     {
-        Storage::disk('public')->delete($slideshow->image_path);
+        // We do NOT delete the file from Storage here.
+        // The SoftDeletes trait in the model handles the 'deleted_at' column.
         $slideshow->delete();
-        return back()->with('status', 'Slide deleted successfully!');
+        
+        return back()->with('status', 'Slide moved to Trash!');
     }
 
     /**
-     * Save Slideshow Settings (Duration and Transition)
+     * RESTORE: Bring back from Trash
+     */
+    public function restore($id)
+    {
+        // Must use withTrashed() to find the record
+        $slide = Slideshow::withTrashed()->findOrFail($id);
+        $slide->restore();
+
+        return back()->with('status', 'Slide restored successfully!');
+    }
+
+    /**
+     * FORCE DELETE: Permanent erasure
+     */
+    public function forceDelete($id)
+    {
+        $slide = Slideshow::withTrashed()->findOrFail($id);
+
+        // This is where we finally delete the physical file
+        if (Storage::disk('public')->exists($slide->image_path)) {
+            Storage::disk('public')->delete($slide->image_path);
+        }
+
+        $slide->forceDelete();
+
+        return back()->with('status', 'Slide permanently deleted from the server.');
+    }
+
+    /**
+     * Save Slideshow Settings
      */
     public function updateSettings(Request $request) 
     {
@@ -66,16 +109,11 @@ class SlideshowController extends Controller
             'transition_effect' => 'required|string'
         ]);
 
-        // 1. Save to Database (Permanent)
         DB::table('settings')->updateOrInsert(['key' => 'slide_duration'], ['value' => $request->slide_duration]);
         DB::table('settings')->updateOrInsert(['key' => 'transition_effect'], ['value' => $request->transition_effect]);
-        
-        // 2. Also save to Session (For immediate UI updates)
-        session([
-            'slide_duration' => $request->slide_duration,
-            'transition_effect' => $request->transition_effect
-        ]);
         
         return back()->with('status', 'Settings updated successfully!');
     }
 }
+  
+ 
