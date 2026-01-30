@@ -263,7 +263,9 @@
                                     </div>
                                 </div>
                             @empty
-                               
+                                <div class="col-span-full text-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-100">
+                                    <p class="text-gray-400 font-medium">The Recycle Bin is empty.</p>
+                                </div>
                             @endforelse
                         </div>
                     </div>
