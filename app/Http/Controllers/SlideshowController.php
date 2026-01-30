@@ -9,18 +9,34 @@ use Illuminate\Support\Facades\DB;
 
 class SlideshowController extends Controller
 {
+    /**
+     * Display the dashboard with paginated slides and trash count.
+     */
 
+    public function destroyAlbum(Request $request)
+    {
+        $category = $request->input('category_name');
 
-    public function index()
-{
-    $slides = Slideshow::all();
-    
-    // Fetch count of soft-deleted items
-    $trashCount = Slideshow::onlyTrashed()->count();
-    // .env value
+        // This will move all images in this category to the Trash (soft delete)
+        \App\Models\Slideshow::where('category_name', $category)->delete();
 
-    return view('admin.dashboard', compact('slides', 'trashCount'));
-}
+        return back()->with('status', "Album '$category' has been moved to the Recycle Bin.");
+    }
+
+    public function index() 
+    {
+        // 1. Fetch count of soft-deleted items for the sidebar badge
+        $trashCount = Slideshow::onlyTrashed()->count();
+
+        // 2. Fetch paginated slides (ordered by newest)
+        // This returns a Paginator object, fixing the "hasPages does not exist" error
+        $slides = Slideshow::orderBy('created_at', 'desc')->paginate(10);
+
+        // 3. Return the correct view (Ensure this matches your folder structure)
+        // Based on your error screenshot, it's likely 'dashboard' or 'admin.dashboard'
+        return view('dashboard', compact('slides', 'trashCount'));
+    }
+
     /**
      * Upload and store multiple images
      */
@@ -52,53 +68,37 @@ class SlideshowController extends Controller
     /**
      * Toggle visibility
      */
-    public function toggle(Slideshow $slideshow)
+        public function toggle(Slideshow $slideshow)
     {
         $slideshow->update(['is_active' => !$slideshow->is_active]);
-        return back()->with('status', 'Slide status updated!');
+        return back()->with('last_tab', 'manage');
     }
 
     /**
      * SOFT DELETE: Move to Trash
      */
+    // For Soft Deleting (Moving to Trash)
     public function destroy(Slideshow $slideshow)
     {
-        // We do NOT delete the file from Storage here.
-        // The SoftDeletes trait in the model handles the 'deleted_at' column.
         $slideshow->delete();
-        
-        return back()->with('status', 'Slide moved to Trash!');
+        // Return back and tell the frontend to stay on the 'manage' tab
+        return back()->with('status', 'Moved to Recycle Bin.')->with('last_tab', 'manage');
     }
 
-    /**
-     * RESTORE: Bring back from Trash
-     */
+    // For Restoring
     public function restore($id)
     {
-        // Must use withTrashed() to find the record
-        $slide = Slideshow::withTrashed()->findOrFail($id);
-        $slide->restore();
-
-        return back()->with('status', 'Slide restored successfully!');
+        Slideshow::withTrashed()->findOrFail($id)->restore();
+        // Return back and tell the frontend to stay on the 'trash' tab
+        return back()->with('status', 'Image restored.')->with('last_tab', 'trash');
     }
 
-    /**
-     * FORCE DELETE: Permanent erasure
-     */
+    // For Permanent Deletion
     public function forceDelete($id)
     {
-        $slide = Slideshow::withTrashed()->findOrFail($id);
-
-        // This is where we finally delete the physical file
-        if (Storage::disk('public')->exists($slide->image_path)) {
-            Storage::disk('public')->delete($slide->image_path);
-        }
-
-        $slide->forceDelete();
-
-        return back()->with('status', 'Slide permanently deleted from the server.');
+        Slideshow::withTrashed()->findOrFail($id)->forceDelete();
+        return back()->with('status', 'Deleted permanently.')->with('last_tab', 'trash');
     }
-
     /**
      * Save Slideshow Settings
      */
@@ -115,5 +115,3 @@ class SlideshowController extends Controller
         return back()->with('status', 'Settings updated successfully!');
     }
 }
-  
- 

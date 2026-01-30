@@ -22,6 +22,9 @@ use App\Http\Controllers\AuthController;
  * SETTINGS MANAGEMENT
  * Update global slideshow configuration (Duration, Transitions)
  */
+
+
+Route::delete('/slideshow/destroy-album', [SlideshowController::class, 'destroyAlbum'])->name('slideshow.destroy-album');
 Route::post('/settings', [SettingsController::class, 'update'])
     ->name('settings.update')
     ->middleware('auth');
