@@ -20,6 +20,7 @@
         tab: '{{ session('last_tab') ?? (session('status') ? 'manage' : 'upload') }}', 
         sidebarOpen: false,
         search: '', 
+        trashSearch: '',
         selectedFiles: [],
         updateFileList(event) {
             const newFiles = Array.from(event.target.files || event.dataTransfer.files);
@@ -115,13 +116,6 @@
                         x-text="tab === 'upload' ? 'Upload New Content' : (tab === 'manage' ? 'Albums Management' : (tab === 'trash' ? 'Recycle Bin' : 'System Settings'))">
                     </h2>
                     <div x-show="tab === 'manage'" class="relative hidden lg:block">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </span>
-                        <input type="text" x-model="search" placeholder="Search albums..." 
-                            class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 outline-none transition w-64">
                     </div>
                 </div>
 
@@ -201,19 +195,37 @@
                             </div>
 
                             <button type="submit" class="w-full md:w-auto bg-red-700 text-white px-10 py-4 rounded-xl font-bold hover:bg-red-800 transition shadow-lg">
-                                Upload All <span x-text="selectedFiles.length"></span> Photos
+                                Upload All <span x-text=""></span> 
                             </button>
                         </form>
                     </div>
                 </div>
 
-                <div x-show="tab === 'manage'" x-cloak x-transition:enter="transition ease-out duration-300">
-                    <div class="max-w-6xl mx-auto space-y-8">
-                        <div class="lg:hidden mb-6">
+              <div x-show="tab === 'manage'" x-cloak x-transition:enter="transition ease-out duration-300">
+                <div class="max-w-6xl mx-auto space-y-8">   
+                    <div class="lg:hidden mb-6 relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </span>
                             <input type="text" x-model="search" placeholder="Search albums..." 
-                                class="w-full px-4 py-3 border rounded-xl focus:ring-red-500 focus:border-red-500 outline-none">
+                            class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-red-500 focus:border-red-500 outline-none shadow-sm">
                         </div>
-
+                            <div class="hidden lg:flex justify-between items-center mb-4">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </span>
+                <input type="text" x-model="search" placeholder="Search albums..." 
+                    class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 outline-none transition w-80 shadow-sm">
+                    </div>
+                            <p class="text-xs text-gray-400 font-medium" x-show="search.length > 0">
+                                Showing results for "<span x-text="search" class="text-red-900"></span>"
+                            </p>
+                    </div>
                         @forelse($slides->groupBy('category_name') as $category => $groupedSlides)
                             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
                                  x-show="search === '' || '{{ strtolower($category) }}'.includes(search.toLowerCase())">
@@ -273,86 +285,101 @@
                     </div>
                 </div>
                 
-                <div x-show="tab === 'trash'" x-cloak x-transition:enter="transition ease-out duration-300">
-                    <div class="max-w-6xl mx-auto space-y-8">
-                        <div class="bg-red-50 p-4 rounded-xl border border-red-100 flex items-center gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <p class="text-sm text-red-800 font-medium">Deleted items are grouped by their original album. Restore them to put them back in the gallery.</p>
-                        </div>
+             <div x-show="tab === 'trash'" x-cloak x-transition:enter="transition ease-out duration-300">
+    <div class="max-w-6xl mx-auto space-y-8">
+        
+        <div class="bg-red-50 p-4 rounded-xl border border-red-100 flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-sm text-red-800 font-medium">Deleted items are grouped by their original album. Restore them to put them back in the gallery.</p>
+        </div>
 
-                        @forelse(\App\Models\Slideshow::onlyTrashed()->get()->groupBy('category_name') as $category => $trashedSlides)
-                            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                                
-                                <div class="flex items-center justify-between mb-4 border-b border-gray-50 pb-3">
-                                    <h3 class="text-md font-bold text-gray-700">
-                                        Album: <span class="text-red-900">{{ $category ?: 'Uncategorized' }}</span>
-                                    </h3>
-                            
-                                        <form action="{{ route('slideshow.restore-album') }}" method="POST">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="category_name" value="{{ $category }}">
-                                        <button type="submit" class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-md font-bold uppercase hover:bg-green-200 transition">
-                                            Restore All
-                                        </button>
-                                             <span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-md font-bold uppercase">
-                                        {{ $trashedSlides->count() }} Items 
-                                    </span>
-                                    </form>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </span>
+                <input type="text" x-model="trashSearch" placeholder="Search deleted albums..." 
+                    class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 outline-none transition w-full md:w-80 shadow-sm bg-white">
+            </div>
+            <p class="text-xs text-gray-400 font-medium" x-show="trashSearch.length > 0">
+                Found in Recycle bin: "<span x-text="trashSearch" class="text-red-900"></span>"
+            </p>
+        </div>
 
-                                    
-                                </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    @foreach($trashedSlides as $trash)
-                                        <div class="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm group transition hover:border-red-200">
-                                            <div class="relative">
-                                                <img src="{{ asset('storage/' . $trash->image_path) }}" 
-                                                    class="w-full h-32 object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition duration-300">
-                                                <div class="absolute top-2 left-2">
-                                                    <span class="bg-red-600 text-white text-[8px] font-bold px-2 py-1 rounded-full uppercase shadow-sm">Deleted</span>
-                                                </div>
-                                            </div>
-
-                                            
-                                            
-                                            <div class="p-3 space-y-2">
-                                                <div class="flex gap-2">
-                                                    <form action="{{ route('slideshow.restore', $trash->id) }}" method="POST" class="flex-1">
-                                                        @csrf @method('PATCH')
-                                                        <button class="w-full py-1.5 bg-green-600 text-white text-[10px] font-bold rounded-lg hover:bg-green-700 transition shadow-sm active:scale-95">
-                                                            RESTORE
-                                                        </button>
-                                                    </form>
-                                                    
-                                                    
-                                                    <form action="{{ route('slideshow.force-delete', $trash->id) }}" method="POST" onsubmit="return confirm('Permanently delete? This cannot be undone.')">
-                                                        @csrf @method('DELETE')
-                                                        <button class="p-1.5 text-red-500 hover:bg-red-50 border border-red-100 rounded-lg transition active:scale-95">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                            </svg>
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @empty
-                            <div class="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-100">
-                                <div class="mb-4 flex justify-center text-gray-200">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </div>
-                                <p class="text-gray-400 font-medium">The Recycle Bin is empty.</p>
-                            </div>
-                        @endforelse
+        @forelse(\App\Models\Slideshow::onlyTrashed()->get()->groupBy('category_name') as $category => $trashedSlides)
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+                 x-show="trashSearch === '' || '{{ strtolower($category) }}'.includes(trashSearch.toLowerCase())">
+                
+                <div class="flex items-center justify-between mb-4 border-b border-gray-50 pb-3">
+                    <h3 class="text-md font-bold text-gray-700">
+                        Album: <span class="text-red-900">{{ $category ?: 'Uncategorized' }}</span>
+                    </h3>
+            
+                    <div class="flex items-center gap-2">
+                        <form action="{{ route('slideshow.restore-album') }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="category_name" value="{{ $category }}">
+                            <button type="submit" class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-md font-bold uppercase hover:bg-green-200 transition">
+                                Restore All
+                            </button>
+                        </form>
+                        <span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-md font-bold uppercase">
+                            {{ $trashedSlides->count() }} Items 
+                        </span>
                     </div>
                 </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    @foreach($trashedSlides as $trash)
+                        <div class="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm group transition hover:border-red-200">
+                            <div class="relative">
+                                <img src="{{ asset('storage/' . $trash->image_path) }}" 
+                                    class="w-full h-32 object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition duration-300">
+                                <div class="absolute top-2 left-2">
+                                    <span class="bg-red-600 text-white text-[8px] font-bold px-2 py-1 rounded-full uppercase shadow-sm">Deleted</span>
+                                </div>
+                            </div>
+
+                            <div class="p-3 space-y-2">
+                                <div class="flex gap-2">
+                                    <form action="{{ route('slideshow.restore', $trash->id) }}" method="POST" class="flex-1">
+                                        @csrf @method('PATCH')
+                                        <button class="w-full py-1.5 bg-green-600 text-white text-[10px] font-bold rounded-lg hover:bg-green-700 transition shadow-sm active:scale-95">
+                                            RESTORE
+                                        </button>
+                                    </form>
+                                    
+                                    <form action="{{ route('slideshow.force-delete', $trash->id) }}" method="POST" onsubmit="return confirm('Permanently delete? This cannot be undone.')">
+                                        @csrf @method('DELETE')
+                                        <button class="p-1.5 text-red-500 hover:bg-red-50 border border-red-100 rounded-lg transition active:scale-95">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @empty
+            <div class="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-100">
+                <div class="mb-4 flex justify-center text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </div>
+                <p class="text-gray-400 font-medium">The Recycle Bin is empty.</p>
+            </div>
+        @endforelse
+    </div>
+</div>
 
                 <div x-show="tab === 'settings'" x-cloak x-transition:enter="transition ease-out duration-300">
                     <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
