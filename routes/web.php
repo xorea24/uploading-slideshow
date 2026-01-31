@@ -21,7 +21,17 @@ use App\Http\Controllers\AuthController;
 /**
  * SETTINGS MANAGEMENT
  * Update global slideshow configuration (Duration, Transitions)
+ * Accessible only to authenticated users
  */
+
+Route::patch('/slideshow/restore-album', [SlideshowController::class, 'restoreAlbum'])->name('slideshow.restore-album');
+Route::patch('/slideshow/{id}/restore', [SlideshowController::class, 'restore'])->name('slideshow.restore');
+
+Route::post('/slideshow/store', [SlideshowController::class, 'store'])->name('slideshow.store');
+// CORRECT: Point it to 'destroy'
+// Use a simple POST or DELETE route without the {category_name} parameter
+Route::delete('/slideshow/destroy-album', [SlideshowController::class, 'destroyAlbum'])
+    ->name('slideshow.destroy-album');
 Route::post('/settings', [SettingsController::class, 'update'])
     ->name('settings.update')
     ->middleware('auth');
