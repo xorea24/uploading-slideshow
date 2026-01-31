@@ -40,6 +40,7 @@ class SlideshowController extends Controller
     }
     public function index()
     {
+        $slides = \App\Models\Slideshow::latest()->get();
         $slides = Slideshow::all();
         $trashCount = Slideshow::onlyTrashed()->count();
         return view('admin.dashboard', compact('slides', 'trashCount'));
@@ -63,6 +64,7 @@ class SlideshowController extends Controller
                     'image_path' => $path,
                     'is_active' => true,
                     'category_name' => $request->category_name,
+                    'updated_at' => now(), // Siguraduhin na mayroon nito
                 ]);
             }
         }

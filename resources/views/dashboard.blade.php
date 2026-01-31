@@ -226,9 +226,17 @@
                                 Showing results for "<span x-text="search" class="text-red-900"></span>"
                             </p>
                     </div>
-                        @forelse($slides->groupBy('category_name') as $category => $groupedSlides)
+                     @forelse($slides->groupBy('category_name')->sortByDesc(fn($group) => $group->first()->created_at) as $category => $groupedSlides)
                             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
                                  x-show="search === '' || '{{ strtolower($category) }}'.includes(search.toLowerCase())">
+
+                                        @if($loop->first && !session('search'))
+                            <div class="flex mb-3">
+                                <span class="bg-red-600 text-white text-[9px] font-black px-2 py-1 rounded shadow-sm animate-pulse tracking-widest uppercase">
+                                    Latest Upload
+                                </span>
+                            </div>
+                        @endif
                                 <div class="flex items-center justify-between mb-6 border-b border-gray-50 pb-4">
                                     <div>
                                         <h3 class="text-lg font-bold text-red-900">{{ $category ?: 'Uncategorized' }}</h3>
@@ -307,8 +315,7 @@
             </div>
             <p class="text-xs text-gray-400 font-medium" x-show="trashSearch.length > 0">
                 Found in Recycle bin: "<span x-text="trashSearch" class="text-red-900"></span>"
-            </p>
-        </div>
+      </div>
 
         @forelse(\App\Models\Slideshow::onlyTrashed()->get()->groupBy('category_name') as $category => $trashedSlides)
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"

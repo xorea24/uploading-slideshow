@@ -6,6 +6,14 @@ use Illuminate\Support\Facades\DB;
 
 class SettingsController extends Controller
 {
+
+public function getLatestData() {
+    return response()->json([
+        'seconds' => \DB::table('settings')->where('key', 'slide_duration')->value('value') ?? 5,
+        'effect' => \DB::table('settings')->where('key', 'transition_effect')->value('value') ?? 'fade',
+        'last_update' => \DB::table('settings')->max('updated_at'), // Mahalaga ito!
+    ]);
+}
     public function update(Request $request)
 {
     $request->validate([

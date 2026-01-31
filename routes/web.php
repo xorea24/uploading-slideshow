@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Slideshow;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SlideshowController; 
 use App\Http\Controllers\AuthController;
@@ -24,7 +25,21 @@ use App\Http\Controllers\AuthController;
  * Accessible only to authenticated users
  */
 
+Route::get('/api/get-latest-settings', function () {
+    // 1. Get latest setting change
+    $lastSetting = DB::table('settings')->max('updated_at');
+    
+    // 2. Get latest image upload (Adjust 'slideshows' if your table name is different)
+    // We also check for 'deleted_at' if you use SoftDeletes to trigger reload on delete
+    $lastImage = DB::table('slideshows')->max('updated_at');
+    
+    return response()->json([
+        'last_update' => max($lastSetting, $lastImage)
+    ]);
+});
+
 Route::patch('/slideshow/restore-album', [SlideshowController::class, 'restoreAlbum'])->name('slideshow.restore-album');
+
 Route::patch('/slideshow/{id}/restore', [SlideshowController::class, 'restore'])->name('slideshow.restore');
 
 Route::post('/slideshow/store', [SlideshowController::class, 'store'])->name('slideshow.store');
