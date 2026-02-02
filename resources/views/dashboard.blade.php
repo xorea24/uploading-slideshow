@@ -262,19 +262,19 @@
             </div>
         @endif
    {{-- INSERTED PAGINATION BLOCK START --}}
-        @if(isset($slides) && $slides instanceof \Illuminate\Pagination\LengthAwarePaginator)
-            <div class="mt-8 px-4 py-4 bg-white border border-gray-100 rounded-xl shadow-sm custom-pagination">
-                {{-- Use the original $slides object here, NOT $grouped --}}
-                {{ $slides->appends(request()->query())->links() }}
-            </div>
-            
-            <div class="mt-2 text-center text-xs text-gray-500">
-                Showing {{ $slides->firstItem() }} to {{ $slides->lastItem() }} of {{ $slides->total() }} total photos
-            </div>
-        @endif
-        {{-- INSERTED PAGINATION BLOCK END --}}
-            </div>
+    @if(isset($slides) && $slides instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        <div class="mt-8 px-4 py-4 bg-white border border-gray-100 rounded-xl shadow-sm custom-pagination">
+            {{-- Use the original $slides object here, NOT $grouped --}}
+            {{ $slides->appends(request()->query())->links() }}
         </div>
+        
+        <div class="mt-2 text-center text-xs text-gray-500">
+            Showing {{ $slides->firstItem() }} to {{ $slides->lastItem() }} of {{ $slides->total() }} total photos
+        </div>
+    @endif
+    {{-- INSERTED PAGINATION BLOCK END --}}
+        </div>
+    </div>
 
                 <div x-show="tab === 'trash'" x-cloak x-transition>
                     <div class="max-w-6xl mx-auto space-y-8">
