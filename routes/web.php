@@ -24,6 +24,9 @@ use App\Http\Controllers\AuthController;
  * Update global slideshow configuration (Duration, Transitions)
  * Accessible only to authenticated users
  */
+
+Route::patch('/admin/slideshow/rename-album', [SlideshowController::class, 'renameAlbum'])
+    ->name('slideshow.rename-album');
 // Palitan ang dating dashboard route nito
 Route::get('/dashboard', [SlideshowController::class, 'index'])->name('dashboard');
 // Recycle bin action 

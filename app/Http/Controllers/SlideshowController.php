@@ -10,6 +10,19 @@ use Illuminate\Support\Facades\DB;
 class SlideshowController extends Controller
 {
 
+public function renameAlbum(Request $request)
+{
+    $request->validate([
+        'old_name' => 'required|string',
+        'newName'  => 'required|string|max:255',
+    ]);
+
+    // Update all photos that share the old category name
+    Slideshow::where('category_name', $request->old_name)
+        ->update(['category_name' => $request->newName]);
+
+    return back()->with('status', 'Album renamed successfully!');
+}
 // I-restore ang lahat ng images sa isang album
 public function restoreAlbum(Request $request)
 {
@@ -49,7 +62,7 @@ public function restoreAlbum(Request $request)
     public function restore($id)
     {
         // Find the record even if it is trashed
-        $slide = \App\Models\Slideshow::withTrashed()->findOrFail($id);
+        $slide = Slideshow::withTrashed()->findOrFail($id);
 
         // Restore the record
         $slide->restore();
