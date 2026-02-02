@@ -23,20 +23,24 @@ class SlideshowController extends Controller
         return back()->with('status', "Album '$category' has been moved to the Recycle Bin.");
     }
 
-    public function index() 
-    {
-        // 1. Fetch count of soft-deleted items for the sidebar badge
-        $trashCount = Slideshow::onlyTrashed()->count();
+public function index(Request $request)
+{
+    // 1. Get paginated slides (This allows $slides->hasPages() to work in Blade)
+    // We use 'page' as the default query parameter
+   // Temporary test: set to a low number like 2
+    $slides = Slideshow::latest()->paginate(2);
 
-        // 2. Fetch paginated slides (ordered by newest)
-        // This returns a Paginator object, fixing the "hasPages does not exist" error
-        $slides = Slideshow::orderBy('created_at', 'desc')->paginate(10);
+    // 2. Get trashed items for the Recycle Bin tab
+    // We paginate this separately or get all if the list is small
+    $trashedSlides = Slideshow::onlyTrashed()->get();
 
-        // 3. Return the correct view (Ensure this matches your folder structure)
-        // Based on your error screenshot, it's likely 'dashboard' or 'admin.dashboard'
-        return view('dashboard', compact('slides', 'trashCount'));
-    }
-
+    // 3. Pass everything to the view
+    return view('dashboard', [
+        'slides' => $slides,
+        'trashedSlides' => $trashedSlides,
+        'trashedCount' => $trashedSlides->count()
+    ]);
+}
     /**
      * Upload and store multiple images
      */
