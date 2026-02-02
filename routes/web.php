@@ -24,6 +24,14 @@ use App\Http\Controllers\AuthController;
  * Update global slideshow configuration (Duration, Transitions)
  * Accessible only to authenticated users
  */
+// Palitan ang dating dashboard route nito
+Route::get('/dashboard', [SlideshowController::class, 'index'])->name('dashboard');
+// Recycle bin action 
+Route::patch('/slideshow/restore-album', [SlideshowController::class, 'restoreAlbum'])
+    ->name('slideshow.restore-album');
+Route::delete('/slideshow/delete-album', [SlideshowController::class, 'forceDeleteAlbum'])
+    ->name('slideshow.delete-album')
+    ->middleware('auth');
 
 Route::get('/api/get-latest-settings', function () {
     // 1. Get latest setting change

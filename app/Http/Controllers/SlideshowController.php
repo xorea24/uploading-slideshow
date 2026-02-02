@@ -10,20 +10,41 @@ use Illuminate\Support\Facades\DB;
 class SlideshowController extends Controller
 {
 
-        public function restoreAlbum(Request $request)
+// I-restore ang lahat ng images sa isang album
+public function restoreAlbum(Request $request)
+{
+    $category = $request->input('category_name');
+    
+    // Kunin lahat ng trashed records sa category na ito at i-restore
+    \App\Models\Slideshow::onlyTrashed()
+        ->where('category_name', $category)
+        ->restore();
+
+    return back()->with([
+        'status' => "Album '$category' has been restored successfully.",
+        'last_tab' => 'trash'
+    ]);
+}
+
+    public function forceDeleteAlbum(Request $request)
+    {
+        $category = $request->input('category_name');
+        $slides = \App\Models\Slideshow::onlyTrashed()
+            ->where('category_name', $category)
+            ->get();
+        
+        foreach ($slides as $slide) 
         {
-            $category = $request->category_name;
-
-            // Restore all deleted items belonging to this category
-            \App\Models\Slideshow::onlyTrashed()
-                ->where('category_name', $category)
-                ->restore();
-
-            return back()->with([
-                'status' => "Album '$category' has been fully restored.",
-                'last_tab' => 'trash'
-            ]);
+            Storage::disk('public')->delete($slide->image_path);
+            $slide->forceDelete();
         }
+
+        return back()->with([
+            'status' => "Album '$category' deleted permanently.",
+            'last_tab' => 'trash'
+        ]);
+    }
+
 
     public function restore($id)
     {
@@ -38,13 +59,22 @@ class SlideshowController extends Controller
             'last_tab' => 'trash' // Keeps the user on the Recycle Bin tab
         ]);
     }
+ 
+
     public function index()
     {
-        $slides = \App\Models\Slideshow::latest()->get();
-        $slides = Slideshow::all();
-        $trashCount = Slideshow::onlyTrashed()->count();
-        return view('admin.dashboard', compact('slides', 'trashCount'));
+        // Kunin ang unique category names
+        $albums = Slideshow::select('category_name')
+                    ->distinct()
+                    ->paginate(5);
+
+        // Kunin ang lahat ng pictures at i-group
+        $slides = Slideshow::all()->groupBy('category_name');
+
+        // Siguraduhin na ang file ay resources/views/dashboard.blade.php
+        return view('dashboard', compact('albums', 'slides'));
     }
+
 
     public function store(Request $request)
     {
