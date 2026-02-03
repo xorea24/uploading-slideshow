@@ -27,8 +27,10 @@ class AlbumController extends Controller
      */
     public function destroy(Request $request, Album $album)
     {
-        // Soft delete all slides in this album
+        // Soft delete all slides in this album, then soft-delete the album
         Slideshow::where('album_id', $album->id)->delete();
+
+        $album->delete();
 
         return back()->with('status', 'Album moved to Recycle Bin.')->with('last_tab', 'manage');
     }
@@ -39,7 +41,12 @@ class AlbumController extends Controller
     public function restoreAlbum(Request $request)
     {
         $albumId = $request->input('album_id');
-        
+        $album = Album::withTrashed()->find($albumId);
+
+        if ($album) {
+            $album->restore();
+        }
+
         Slideshow::onlyTrashed()
             ->where('album_id', $albumId)
             ->restore();
@@ -64,6 +71,12 @@ class AlbumController extends Controller
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($slide->image_path);
             }
             $slide->forceDelete();
+        }
+
+        // Also permanently remove the album record if present
+        $album = Album::withTrashed()->find($albumId);
+        if ($album) {
+            $album->forceDelete();
         }
 
         return back()->with('status', 'Album permanently deleted.')->with('last_tab', 'trash');
