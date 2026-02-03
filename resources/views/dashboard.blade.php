@@ -22,6 +22,7 @@
         search: '', 
         page: 1,
         perPage: 10,
+        isNewAlbum: false,
         get totalVisible() {
             return document.querySelectorAll('.album-card').length;
         },
@@ -147,9 +148,19 @@
                 <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                     <form action="{{ route('slideshow.store') }}" method="POST" enctype="multipart/form-data" @submit="submitForm" class="space-y-6">
                         @csrf
-                        <div class="space-y-2">
-                            <label class="block text-sm font-bold text-gray-700 uppercase tracking-wide">Album Name</label>
-                            <input type="text" name="category_name" placeholder="e.g. Mayor's Cup 2024" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none" required>
+                       <div class="space-y-2">
+                            <label class="block text-sm font-bold text-gray-700 uppercase tracking-wide">Select or Create Album</label>
+                            <select name="album_id" id="album_select" @change="isNewAlbum = $el.value === 'new'" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none" required>
+                                <option value="">-- Select Album --</option>
+                                @foreach($albums as $album)
+                                    <option value="{{ $album->id }}">{{ $album->name }}</option>
+                                @endforeach
+                                <option value="new">+ Create New Album</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-2 mt-2" x-show="isNewAlbum" x-transition>
+                            <input type="text" name="new_album_name" placeholder="Enter New Album Name" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none">
                         </div>
 
                         <div id="drop-zone" @dragover.prevent="$el.classList.add('border-red-500', 'bg-red-50')" @dragleave.prevent="$el.classList.remove('border-red-500', 'bg-red-50')" @drop.prevent="updateFileList($event)" class="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center cursor-pointer bg-gray-50 relative">
@@ -199,95 +210,102 @@
 
         @php $albumIndex = 0; @endphp
 
-        @forelse($slides->groupBy('category_name')->sortByDesc(fn($group) => $group->first()->created_at) as $category => $groupedSlides)
-            @php 
-                $albumIndex++;
-                $displayCategory = $category ?: 'Uncategorized';
-            @endphp
-            
-            <div class="album-card bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6"
-                 x-data="{ 
-                    myIndex: {{ $albumIndex }},
-                    localCategory: '{{ $displayCategory }}'
-                 }"
-                 x-show="(search === '' || localCategory.toLowerCase().includes(search.toLowerCase())) && (myIndex > (page - 1) * perPage && myIndex <= page * perPage)"
-                 x-transition:enter="transition ease-out duration-300">
+       @forelse($albums as $album)
+    @php 
+        $albumIndex++;
+        $groupedSlides = $album->slides; // Kinukuha lahat ng photos under sa album na ito
+    @endphp
+    
+    <div class="album-card bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6"
+         x-data="{ 
+            myIndex: {{ $albumIndex }},
+            localCategory: '{{ $album->name }}'
+         }"
+         x-show="(search === '' || localCategory.toLowerCase().includes(search.toLowerCase())) && (myIndex > (page - 1) * perPage && myIndex <= page * perPage)"
+         x-transition:enter="transition ease-out duration-300">
 
-                <div class="flex items-center justify-between mb-6 border-b border-gray-50 pb-4">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h3 class="text-lg font-bold text-red-900" x-text="localCategory"></h3>
-                            
-                            <button @click="let newName = prompt('Enter new album name:', localCategory); if(newName && newName !== localCategory) { $refs.editForm.newName.value = newName; $refs.editForm.submit(); }" 
-                                    class="p-1 text-gray-400 hover:text-blue-600 transition" title="Edit Album Name">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                </svg>
-                            </button>
-
-                            <form x-ref="editForm" action="{{ route('slideshow.rename-album') }}" method="POST" class="hidden">
-                                @csrf @method('PATCH')
-                                <input type="hidden" name="old_name" value="{{ $category }}">
-                                <input type="hidden" name="newName">
-                            </form>
-                        </div>
-                        
-                        <div class="flex items-center gap-3">
-                            <p class="text-xs text-gray-500">{{ $groupedSlides->count() }} total photos</p>
-                            <span class="text-gray-300">•</span>
-                            <p class="text-[10px] text-gray-400 italic">
-                                First Uploaded: {{ $groupedSlides->min('created_at')->format('M d, Y') }}
-                            </p>
-                        </div>
-                    </div>
+        <div class="flex items-center justify-between mb-6 border-b border-gray-50 pb-4">
+            <div>
+                <div class="flex items-center gap-2">
+                    <h3 class="text-lg font-bold text-red-900" x-text="localCategory"></h3>
                     
-                    <div class="flex items-center gap-2">
-                        <button @click="tab = 'upload'; $nextTick(() => { document.getElementsByName('category_name')[0].value = '{{ $category }}' })" 
-                                class="p-1.5 text-blue-600 bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                        </button>
-                        
-                        <form action="{{ route('slideshow.destroy-album') }}" method="POST" onsubmit="return confirm('Move ENTIRE album to Recycle Bin?')">
-                            @csrf @method('DELETE')
-                            <input type="hidden" name="category_name" value="{{ $category }}">
-                            <button type="submit" class="p-1.5 text-red-500 bg-red-50 border border-red-100 rounded-lg hover:bg-red-100">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            </button>
-                        </form>
-                    </div>
+                    <button @click="let newName = prompt('Enter new album name:', localCategory); if(newName && newName !== localCategory) { $refs.editForm.newName.value = newName; $refs.editForm.submit(); }" 
+                            class="p-1 text-gray-400 hover:text-blue-600 transition" title="Edit Album Name">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                    </button>
+
+                    <form x-ref="editForm" action="{{ route('albums.update', $album->id) }}" method="POST" class="hidden">
+                        @csrf @method('PATCH')
+                        <input type="hidden" name="name" x-model="newName">
+                    </form>
                 </div>
+                
+                <div class="flex items-center gap-3">
+                    <p class="text-xs text-gray-500">{{ $groupedSlides->count() }} total photos</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button @click="tab = 'upload'; $nextTick(() => { document.getElementById('album_select').value = '{{ $album->id }}' })" 
+                        class="p-1.5 text-blue-600 bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                </button>
+                
+                <form action="{{ route('albums.destroy', $album->id) }}" method="POST" onsubmit="return confirm('Move ENTIRE album to Recycle Bin?')">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="p-1.5 text-red-500 bg-red-50 border border-red-100 rounded-lg hover:bg-red-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                </form>
+            </div>
+        </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                    @foreach($groupedSlides as $slide)
-                        <div class="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden group">
-                            <div class="relative">
-                                <img src="{{ asset('storage/' . $slide->image_path) }}" class="w-full h-24 object-cover">
-                                
-                                <div class="absolute bottom-1 right-1">
-                                    <span class="bg-black/60 text-white text-[7px] px-1 rounded backdrop-blur-sm">
-                                        {{ $slide->created_at->diffForHumans() }}
-                                    </span>
-                                </div>
-
-                                <div class="absolute top-1 left-1">
-                                    <span class="{{ $slide->is_active ? 'bg-green-500' : 'bg-gray-500' }} text-white text-[7px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
-                                        {{ $slide->is_active ? 'LIVE' : 'HIDDEN' }}
-                                    </span>
-                                </div>
+        <!-- Display slides in this album -->
+        @if($groupedSlides->count() > 0)
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                @foreach($groupedSlides as $slide)
+                    <div class="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm group transition hover:border-red-200">
+                        <div class="relative">
+                            <img src="{{ asset('storage/' . $slide->image_path) }}" 
+                                class="w-full h-32 object-cover group-hover:opacity-80 transition duration-300"
+                                alt="{{ $slide->title }}">
+                            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
+                                <span class="bg-{{ $slide->is_active ? 'green' : 'gray' }}-600 text-white text-[8px] font-bold px-2 py-1 rounded-full">{{ $slide->is_active ? 'ACTIVE' : 'HIDDEN' }}</span>
                             </div>
-                            <div class="p-2 flex flex-col gap-1">
+                        </div>
+
+                        <div class="p-3 space-y-2">
+                            <p class="text-[10px] text-gray-600 truncate font-medium">{{ $slide->title }}</p>
+                            <div class="flex gap-2">
                                 <form action="{{ route('slideshow.toggle', $slide->id) }}" method="POST" class="flex-1">
                                     @csrf @method('PATCH')
-                                    <button class="w-full py-1 bg-white border border-gray-200 text-[9px] font-bold rounded-md hover:bg-gray-100 uppercase transition">
-                                        {{ $slide->is_active ? 'Hide' : 'Show' }}
+                                    <button class="w-full py-1.5 {{ $slide->is_active ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700' }} text-white text-[10px] font-bold rounded-lg transition shadow-sm active:scale-95">
+                                        {{ $slide->is_active ? 'HIDE' : 'SHOW' }}
+                                    </button>
+                                </form>
+                                
+                                <form action="{{ route('slideshow.destroy', $slide->id) }}" method="POST" onsubmit="return confirm('Move to Recycle Bin?')">
+                                    @csrf @method('DELETE')
+                                    <button class="p-1.5 text-red-500 hover:bg-red-50 border border-red-100 rounded-lg transition active:scale-95">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
                                     </button>
                                 </form>
                             </div>
                         </div>
-                    @endforeach
-                </div>
+                    </div>
+                @endforeach
             </div>
-        @empty
+        @else
+            <div class="text-center py-8 text-gray-400 italic">
+                <p>No photos in this album yet. Click the + button to add photos.</p>
+            </div>
+        @endif
+        </div>
+@empty
             <div class="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
                 <p class="text-gray-400">No photos found in the system.</p>
             </div>
@@ -319,30 +337,31 @@
                 Found in Recycle bin: "<span x-text="trashSearch" class="text-red-900"></span>"
       </div>
 
-        @forelse(\App\Models\Slideshow::onlyTrashed()->get()->groupBy('category_name') as $category => $trashedSlides)
+        @forelse(\App\Models\Slideshow::onlyTrashed()->get()->groupBy('album_id') as $albumId => $trashedSlides)
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
-                 x-show="trashSearch === '' || '{{ strtolower($category) }}'.includes(trashSearch.toLowerCase())">
+                 x-show="trashSearch === '' || '{{ $album ? strtolower($album->name) : 'deleted' }}'.includes(trashSearch.toLowerCase())">
                 
                 <div class="flex items-center justify-between mb-4 border-b border-gray-50 pb-3">
+                    @php $album = \App\Models\Album::find($albumId); @endphp
                     <h3 class="text-md font-bold text-gray-700">
-                        Album: <span class="text-red-900">{{ $category ?: 'Uncategorized' }}</span>
+                        Album: <span class="text-red-900">{{ $album ? $album->name : 'Deleted Album' }}</span>
                     </h3>
             
                     <div class="flex items-center gap-2">
                     <form action="{{ route('slideshow.restore-album') }}" method="POST">
                                 @csrf
                                 @method('PATCH')
-                                <input type="hidden" name="category_name" value="{{ $category }}">
+                                <input type="hidden" name="album_id" value="{{ $albumId }}">
                                 <button type="submit" class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-md font-bold uppercase hover:bg-green-200 transition">
                                     Restore All
                                 </button>
                             </form>
 
-                        <form action="{{ route('slideshow.delete-album', $category) }}" method="POST"
+                        <form action="{{ route('slideshow.delete-album', $albumId) }}" method="POST"
                           onsubmit="return confirm('Are you sure? This will Be permanently deleted.')">
                             
                             @csrf @method('DELETE')
-                            <input type="hidden" name="category_name" value="{{ $category }}">
+                            <input type="hidden" name="album_id" value="{{ $albumId }}">
                             <button type="submit" class="text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded-md font-bold uppercase hover:bg-red-200 transition">
                                 Delete All Permanently 
                             </button>

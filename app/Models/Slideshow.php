@@ -15,10 +15,11 @@ class Slideshow extends Model
      */
     use SoftDeletes; // 2. Add this inside the class
    
-    protected $fillable = [
-        'title',
-        'category_name',
-        'image_path',
-        'is_active',
-    ];
+  protected $fillable = ['title', 'image_path', 'album_id', 'order', 'is_active'];
+
+   public function album()
+   {
+       return $this->belongsTo(Album::class);
+   }
+
 }

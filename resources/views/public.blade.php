@@ -32,7 +32,23 @@
             bottom: 10%;
             left: 5%;
             z-index: 10;
+
         }
+        #loading-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: black;
+            /* Quick 0.3s fade in, so the 2.5s timer feels accurate */
+            transition: opacity 0.3s ease-in-out; 
+            opacity: 0;
+            pointer-events: none;
+        }
+        
     </style>
 </head>
 <body class="bg-black">
@@ -59,7 +75,7 @@
                 <img src="{{ asset('storage/' . $slide->image_path) }}" alt="{{ $slide->title }}">
                 <div class="title-overlay bg-black/50 text-white px-6 py-3 rounded-lg backdrop-blur-md">
                     <h2 class="text-2xl font-bold">{{ $slide->title }}</h2>
-                    <p class="text-sm text-gray-200">{{ $slide->category_name ?? 'Gallery' }}</p>
+                    <p class="text-sm text-gray-200">{{ $slide->album_name ?? 'Gallery' }}</p>
                 </div>
             </div>
         @empty
@@ -74,19 +90,17 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
     <script>
-        // MASTER UPDATE LOGIC
-       // Initialize with the timestamp from the server
+     // MASTER UPDATE LOGIC
         let currentUpdateTimestamp = "{{ $masterTimestamp }}";
 
         async function fetchLatestData() {
             try {
-                // Add a cache-buster query string to prevent browser caching the API response
                 const response = await fetch('/api/get-latest-settings?t=' + Date.now()); 
                 const data = await response.json();
 
-                // Compare timestamps
+                // Check if data has changed
                 if (data.last_update && data.last_update > currentUpdateTimestamp) {
-                    console.log("New content detected! Reloading...");
+                    console.log("New content detected! Showing overlay for 2.5s...");
                     showLoadingAndReload();
                 }
             } catch (e) {
@@ -96,17 +110,19 @@
 
         function showLoadingAndReload() {
             const overlay = document.getElementById('loading-overlay');
+            
+            // 1. Show the overlay immediately
             overlay.classList.remove('opacity-0', 'pointer-events-none');
             overlay.classList.add('opacity-100');
 
-            // Give the user 2.5 seconds to read "Updating Album..."
+            // 2. Wait exactly 2.5 seconds (2500ms) before reloading
             setTimeout(() => {
                 window.location.reload();
             }, 2500);
         }
 
-    // Check every 10 seconds
-    setInterval(fetchLatestData, 10000);
+// Check every 10 seconds for changes
+setInterval(fetchLatestData, 10000);
         // SWIPER INIT
         const slideDuration = {{ $seconds }} * 1000; 
         const effectSetting = "{{ $effect }}";

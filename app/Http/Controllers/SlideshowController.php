@@ -3,158 +3,103 @@
 namespace App\Http\Controllers;
 
 use App\Models\Slideshow;
+use App\Models\Album; // IMPORTANTE: Huwag kalimutan ito
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 
 class SlideshowController extends Controller
 {
-
-public function renameAlbum(Request $request)
-{
-    $request->validate([
-        'old_name' => 'required|string',
-        'newName'  => 'required|string|max:255',
-    ]);
-
-    // Update all photos that share the old category name
-    Slideshow::where('category_name', $request->old_name)
-        ->update(['category_name' => $request->newName]);
-
-    return back()->with('status', 'Album renamed successfully!');
-}
-// I-restore ang lahat ng images sa isang album
-public function restoreAlbum(Request $request)
-{
-    $category = $request->input('category_name');
-    
-    // Kunin lahat ng trashed records sa category na ito at i-restore
-    \App\Models\Slideshow::onlyTrashed()
-        ->where('category_name', $category)
-        ->restore();
-
-    return back()->with([
-        'status' => "Album '$category' has been restored successfully.",
-        'last_tab' => 'trash'
-    ]);
-}
-
-    public function forceDeleteAlbum(Request $request)
+    /**
+     * INDEX: Fetching albums with their slides.
+     */
+    public function index() 
     {
-        $category = $request->input('category_name');
-        $slides = \App\Models\Slideshow::onlyTrashed()
-            ->where('category_name', $category)
-            ->get();
+        // Kinukuha ang albums kasama ang slides nila (Eager Loading)
+        $albums = Album::with(['slides' => function($query) {
+            $query->orderBy('created_at', 'desc');
+        }])->get();
         
-        foreach ($slides as $slide) 
-        {
-            Storage::disk('public')->delete($slide->image_path);
-            $slide->forceDelete();
-        }
-
-        return back()->with([
-            'status' => "Album '$category' deleted permanently.",
-            'last_tab' => 'trash'
-        ]);
+        // Ipapasa sa view (Dapat 'dashboard' ang file name mo)
+        return view('dashboard', compact('albums'));
     }
 
-
-    public function restore($id)
-    {
-        // Find the record even if it is trashed
-        $slide = Slideshow::withTrashed()->findOrFail($id);
-
-        // Restore the record
-        $slide->restore();
-
-        return back()->with([
-            'status' => 'Photo successfully restored to ' . ($slide->category_name ?: 'Album'),
-            'last_tab' => 'trash' // Keeps the user on the Recycle Bin tab
-        ]);
-    }
- 
-
-    public function index()
-    {
-        // Kunin ang unique category names
-        $albums = Slideshow::select('category_name')
-                    ->distinct()
-                    ->paginate(5);
-
-        // Kunin ang lahat ng pictures at i-group
-        $slides = Slideshow::all()->groupBy('category_name');
-
-        // Siguraduhin na ang file ay resources/views/dashboard.blade.php
-        return view('dashboard', compact('albums', 'slides'));
-    }
-
-
+    /**
+     * STORE: Saving images and handling New Album creation.
+     */
     public function store(Request $request)
     {
         $request->validate([
-            'category_name' => 'required|string|max:255',
+            'album_id' => 'required', // Pwedeng ID or string "new"
+            'new_album_name' => 'required_if:album_id,new|max:255',
             'images' => 'required',
-            'images.*' => 'image|mimes:jpeg,png,jpg|max:2048' 
+            'images.*' => 'image|mimes:jpeg,png,jpg|max:5120' // 5MB limit
         ]);
+
+        // Logic para sa Album
+        $albumId = $request->album_id;
+
+        if ($albumId === 'new') {
+            $album = Album::create(['name' => $request->new_album_name]);
+            $albumId = $album->id;
+        }
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $title = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
                 $path = $image->store('slides', 'public');
 
                 Slideshow::create([
-                    'title' => $title,
+                    'title' => pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME),
                     'image_path' => $path,
                     'is_active' => true,
-                    'category_name' => $request->category_name,
-                    'updated_at' => now(), // Siguraduhin na mayroon nito
+                    'album_id' => $albumId, 
                 ]);
             }
         }
-        return back()->with('status', 'All images uploaded successfully!');
+
+        return back()->with('status', 'Photos uploaded successfully!')->with('last_tab', 'upload');
     }
 
+
+
+    /**
+     * RESTORE: Restore trashed slideshow
+     */
+    public function restore($id)
+    {
+        $slideshow = Slideshow::withTrashed()->findOrFail($id);
+        $slideshow->restore();
+        
+        return back()->with('status', 'Photo restored successfully!')->with('last_tab', 'trash');
+    }
+
+    /**
+     * DESTROY: Soft delete a slideshow
+     */
     public function destroy(Slideshow $slideshow)
     {
         $slideshow->delete();
-        return back()->with('status', 'Moved to Recycle Bin.')->with('last_tab', 'manage');
-    }
-
-    // Add this inside your SlideshowController class
-        public function destroyAlbum(Request $request) // Change this to accept Request
-        {
-            // Get the category name from the hidden input field in your form
-            $category_name = $request->input('category_name');
-
-            if ($category_name) {
-                // Soft delete all images matching the category
-                Slideshow::where('category_name', $category_name)->delete();
-                
-                return back()->with('status', "Album '$category_name' moved to Recycle Bin.")
-                            ->with('last_tab', 'manage');
-            }
-
-            return back()->with('error', 'Category not found.');
-        }
-
-    public function forceDelete($id)
-    {
-        $slideshow = Slideshow::withTrashed()->findOrFail($id);
         
-        // Physically remove file so it's gone from storage too
-        if (Storage::disk('public')->exists($slideshow->image_path)) {
-            Storage::disk('public')->delete($slideshow->image_path);
-        }
-        
-        $slideshow->forceDelete();
-        return back()->with('status', 'Deleted permanently.')->with('last_tab', 'trash');
+        return back()->with('status', 'Photo moved to Recycle Bin.')->with('last_tab', 'manage');
     }
 
     public function toggle(Slideshow $slideshow)
     {
         $slideshow->is_active = !$slideshow->is_active;
         $slideshow->save();
-        return back()->with('status', 'Slide visibility toggled successfully!');
+        return back()->with('status', 'Visibility updated!');
+    }
+
+    public function forceDelete($id)
+    {
+        $slideshow = Slideshow::withTrashed()->findOrFail($id);
+        
+        if ($slideshow->image_path && Storage::disk('public')->exists($slideshow->image_path)) {
+            Storage::disk('public')->delete($slideshow->image_path);
+        }
+        
+        $slideshow->forceDelete();
+        return back()->with('status', 'Deleted permanently.')->with('last_tab', 'trash');
     }
 
     public function updateSettings(Request $request) 
