@@ -1,11 +1,23 @@
+<!-- ============================================================ -->
+<!-- ADMIN DASHBOARD - MAYOR'S OFFICE                            -->
+<!-- Slideshow Management System                                 -->
+<!-- ============================================================ -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Meta Tags & Title -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Mayor's Office</title>
+    
+    <!-- Tailwind CSS Framework -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js for Reactive Components -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom Styles -->
     <style>
         [x-cloak] { display: none !important; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -15,6 +27,9 @@
     </style>
 </head>
 
+<!-- ============================================================ -->
+<!-- MAIN BODY - Dashboard Container                             -->
+<!-- ============================================================ -->
 <body class="bg-gray-50 font-sans" 
     x-data="{ 
         tab: '{{ session('last_tab') ?? (session('status') ? 'manage' : 'upload') }}', 
@@ -46,6 +61,10 @@
     }">
 
     <div class="flex min-h-screen">
+        <!-- ============================================================ -->
+        <!-- MOBILE MENU TOGGLE BUTTON                                    -->
+        <!-- Hidden on desktop, shown on mobile devices                    -->
+        <!-- ============================================================ -->
         <div class="md:hidden fixed top-4 left-4 z-50">
             <button @click="sidebarOpen = !sidebarOpen" class="bg-red-950 text-white p-2 rounded-lg shadow-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -54,15 +73,21 @@
             </button>
         </div>
 
+     <!-- ============================================================ -->
+     <!-- SIDEBAR NAVIGATION                                           -->
+     <!-- Responsive sidebar with navigation menu & logout button     -->
+     <!-- ============================================================ -->
      <aside class="w-64 bg-red-950 text-white fixed md:static inset-y-0 left-0 z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col shadow-2xl" 
        :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
     
+    <!-- Sidebar Header with Logo -->
     <div class="p-6">   
        <img src="{{ asset('image/stc_logo2.png') }}" alt="Logo" class="w-20 h-20 mb-4 mx-auto md:mx-0">
         <h1 class="text-2xl font-bold tracking-wider uppercase">Mayor's <span class="text-red-400">Office</span></h1>
         <p class="text-[10px] text-red-300 tracking-[0.2em] mt-1">UPLOADING SYSTEM</p>
     </div>  
 
+    <!-- Navigation Menu -->
     <nav class="flex-1 px-4 space-y-2 mt-4">
         <a href="#" @click.prevent="tab = 'manage'; sidebarOpen = false" 
             :class="tab === 'manage' ? 'bg-red-600 text-white shadow-lg' : 'text-red-200 hover:bg-red-900'"
@@ -105,6 +130,7 @@
         </a>
     </nav>
 
+    <!-- Logout Section -->
     <div class="p-4 border-t border-red-900/50">
         <form method="POST" action="{{ route('logout') }}">
             @csrf
@@ -118,12 +144,18 @@
     </div>
 </aside>
 
+       <!-- ============================================================ -->
+       <!-- MAIN CONTENT AREA                                            -->
+       <!-- Displays different tab content based on user selection       -->
+       <!-- ============================================================ -->
        <main class="flex-1 overflow-y-auto h-screen bg-gray-50 custom-scrollbar">
             <header class="bg-white border-b border-gray-100 px-8 py-4 flex justify-between items-center sticky top-0 z-10 shadow-sm">
+                <!-- Page Title -->
                 <h2 class="text-xl font-bold text-gray-800" 
                     x-text="tab === 'upload' ? 'Upload New Content' : (tab === 'manage' ? 'Albums Management' : (tab === 'trash' ? 'Recycle Bin' : 'System Settings'))">
                 </h2>
 
+                <!-- User Info & Avatar -->
                 <div class="flex items-center gap-4">
                     <div class="text-right hidden sm:block">
                         <p class="text-xs font-bold text-gray-900">{{ Auth::user()->name }}</p>
@@ -144,6 +176,10 @@
                 @endif
             </div>
 
+            <!-- ============================================================ -->
+            <!-- UPLOAD TAB CONTENT                                           -->
+            <!-- File upload form with drag & drop support                    -->
+            <!-- ============================================================ -->
             <div x-show="tab === 'upload'" x-cloak x-transition>
                 <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                     <form action="{{ route('slideshow.store') }}" method="POST" enctype="multipart/form-data" @submit="submitForm" class="space-y-6">
@@ -191,6 +227,10 @@
                 </div>
             </div>
 
+      <!-- ============================================================ -->
+      <!-- MANAGE ALBUMS TAB CONTENT                                    -->
+      <!-- Display, search, edit & manage photo albums                 -->
+      <!-- ============================================================ -->
       <div x-show="tab === 'manage'" x-cloak x-transition>
     <div class="max-w-6xl mx-auto px-4 pb-20">
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -313,6 +353,10 @@
     </div>
 </div>
             
+             <!-- ============================================================ -->
+             <!-- RECYCLE BIN / TRASH TAB CONTENT                              -->
+             <!-- Manage deleted items, restore or permanently delete         -->
+             <!-- ============================================================ -->
              <div x-show="tab === 'trash'" x-cloak x-transition:enter="transition ease-out duration-300">
     <div class="max-w-6xl mx-auto space-y-8">
         
@@ -426,6 +470,10 @@
     </div>
 </div>
 
+                <!-- ============================================================ -->
+                <!-- SETTINGS TAB CONTENT                                        -->
+                <!-- Configure slideshow duration & transition effects           -->
+                <!-- ============================================================ -->
                 <div x-show="tab === 'settings'" x-cloak x-transition:enter="transition ease-out duration-300">
                     <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                         <form action="{{ route('settings.update') }}" method="POST" class="space-y-8">
@@ -454,7 +502,7 @@
                                         <option value="slide-down" {{ $currentEffect == 'slide-down' ? 'selected' : '' }}>Slide Down</option>
                                         <option value="slide-left" {{ $currentEffect == 'slide-left' ? 'selected' : '' }}>Slide Left</option>
                                         <option value="slide-right" {{ $currentEffect == 'slide-right' ? 'selected' : '' }}>Slide Right</option>
-                                        <option value="zoom" {{ $currentEffect == 'zoom' ? 'selected' : '' }}>Ken Burns (Zoom)</option>
+                            
                                     </select>
                                     <p class="text-[10px] text-gray-400 font-medium">How the images move during change.</p>
                                 </div>
@@ -479,3 +527,6 @@
     </div>
 </body>
 </html>
+<!-- ============================================================ -->
+<!-- END OF DASHBOARD                                             -->
+<!-- ============================================================ -->
