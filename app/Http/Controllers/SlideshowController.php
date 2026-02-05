@@ -32,13 +32,14 @@ class SlideshowController extends Controller
             'new_album_name' => 'required_if:album_id,new|max:255',
             'new_album_desc' => 'nullable|string|max:1000',
             'images' => 'required',
-            'images.*' => 'image|mimes:jpeg,png,jpg|max:5120'
+            'images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
+
         ]);
 
         $albumId = $request->album_id;
 
         if ($albumId === 'new') {
-            $album = Album::create([
+            $album = Album::create([    
                 'name' => $request->new_album_name,
                 'description' => $request->new_album_desc ?? null,
             ]);
