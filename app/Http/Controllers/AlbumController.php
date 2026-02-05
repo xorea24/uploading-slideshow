@@ -5,9 +5,46 @@ namespace App\Http\Controllers;
 use App\Models\Album;
 use App\Models\Slideshow;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage; // Added this import
+use App\Http\Controllers\AlbumController;
 
 class AlbumController extends Controller
 {
+    /**
+     * TOGGLE ALL: Show or Hide all slides in an album
+     */
+
+  // App\Http\Controllers\AlbumController.php
+
+public function upload(Request $request)
+{
+    // ... validation ...
+
+    foreach ($request->file('images') as $image) {
+        $path = $image->store('slides', 'public');
+
+        $album->slides()->create([
+            'image_path' => $path,
+            'title'      => $image->getClientOriginalName(),
+            'description'=> $request->description,
+            'is_active'  => true, // This ensures visibility immediately upon upload
+        ]);
+    }
+
+    return back()->with('status', 'Images uploaded and set to Active!');
+}
+    public function toggle(Album $album)
+    {
+        // Check if there's at least one hidden slide
+        $hasHidden = $album->slides()->where('is_active', false)->exists();
+
+        // If hidden slides exist, make everything active (true). 
+        // If everything is already active, hide everything (false).
+        $album->slides()->update(['is_active' => $hasHidden]);
+
+        return back()->with('status', 'Album visibility updated!');
+    }
+
     /**
      * Update album name
      */
@@ -25,11 +62,12 @@ class AlbumController extends Controller
     /**
      * Soft delete album and its slides
      */
-    public function destroy(Request $request, Album $album)
+    public function destroy(Album $album)
     {
-        // Soft delete all slides in this album, then soft-delete the album
+        // Soft delete all slides in this album
         Slideshow::where('album_id', $album->id)->delete();
 
+        // Soft delete the album itself
         $album->delete();
 
         return back()->with('status', 'Album moved to Recycle Bin.')->with('last_tab', 'manage');
@@ -65,13 +103,12 @@ class AlbumController extends Controller
         $slides = Slideshow::onlyTrashed()->where('album_id', $albumId)->get();
         
         foreach ($slides as $slide) {
-            if ($slide->image_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($slide->image_path)) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($slide->image_path);
+            if ($slide->image_path && Storage::disk('public')->exists($slide->image_path)) {
+                Storage::disk('public')->delete($slide->image_path);
             }
             $slide->forceDelete();
         }
 
-        // Also permanently remove the album record if present
         $album = Album::withTrashed()->find($albumId);
         if ($album) {
             $album->forceDelete();

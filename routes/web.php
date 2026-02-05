@@ -16,7 +16,10 @@ use App\Http\Controllers\AuthController;
 | Web Routes - Mayor's Office Slideshow System
 |--------------------------------------------------------------------------
 */
-
+Route::patch('/albums/{album}/toggle', [AlbumController::class, 'toggle'])->name('albums.toggle');
+/**
+ * DASHBOARD
+ */
 // DASHBOARD - Ngayon ay dadaan na sa SlideshowController@index para makuha ang $albums
 Route::get('/dashboard', [SlideshowController::class, 'index'])
     ->name('dashboard')
@@ -50,7 +53,12 @@ Route::prefix('slideshow')->middleware('auth')->group(function () {
 
 /**
  * SETTINGS & API
+ * 
+ * 
  */
+
+// To this:
+Route::patch('/settings', [SettingController::class, 'update'])->name('settings.update');
 Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update')->middleware('auth');
 
 Route::get('/api/get-latest-settings', function () {

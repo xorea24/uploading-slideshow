@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Slideshow;
-use App\Models\Album; // IMPORTANTE: Huwag kalimutan ito
+use App\Models\Album;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -11,36 +11,30 @@ use Illuminate\Support\Facades\DB;
 class SlideshowController extends Controller
 {
     /**
-     * INDEX: Fetching albums with their slides.
+     * INDEX: Display albums and slides
      */
     public function index() 
     {
-        // 2. PASTE THE NEW CODE HERE:
-    $albums = Album::with(['slides' => function($query) {
-        $query->latest(); 
-    }])->latest()->get();
+        $albums = Album::with(['slides' => function($query) {
+            $query->latest(); 
+        }])->latest()->get();
 
-        // Get the latest uploaded slide globally
-        $latestUpload = Slideshow::with('album')->orderBy('created_at', 'desc')->first();
-        
-         // 3. This returns the data to your HTML (Blade) file
         return view('dashboard', compact('albums'));
     }
 
     /**
-     * STORE: Saving images and handling New Album creation.
+     * STORE: Handle multiple uploads and album creation
      */
     public function store(Request $request)
     {
         $request->validate([
-            'album_id' => 'required', // Pwedeng ID or string "new"
+            'album_id' => 'required',
             'new_album_name' => 'required_if:album_id,new|max:255',
             'new_album_desc' => 'nullable|string|max:1000',
             'images' => 'required',
-            'images.*' => 'image|mimes:jpeg,png,jpg|max:5120' // 5MB limit
+            'images.*' => 'image|mimes:jpeg,png,jpg|max:5120'
         ]);
 
-        // Logic para sa Album
         $albumId = $request->album_id;
 
         if ($albumId === 'new') {
@@ -64,22 +58,38 @@ class SlideshowController extends Controller
             }
         }
 
-        return back()
-            ->with('status', 'Photos uploaded successfully!')
-            ->with('last_tab', 'manage')
-            ->with('last_album', $albumId);
+        return back()->with('status', 'Photos uploaded successfully!')->with('last_tab', 'manage');
     }
 
-
+    /**
+     * TOGGLE: Switch visibility for a single slide
+     */
+    public function toggle(Slideshow $slideshow)
+    {
+        $slideshow->is_active = !$slideshow->is_active;
+        $slideshow->save();
+        return back()->with('status', 'Visibility updated!');
+    }
 
     /**
-     * RESTORE: Restore trashed slideshow
+     * TOGGLE ALL: Switch visibility for an entire album
+     */
+    public function toggleAll(Album $album)
+    {
+        $hasHidden = $album->slides()->where('is_active', false)->exists();
+        $album->slides()->update(['is_active' => $hasHidden]);
+
+        return back()->with('status', 'Album visibility updated successfully!');
+    }
+
+    /**
+     * RESTORE: Single item
      */
     public function restore($id)
     {
         $slideshow = Slideshow::withTrashed()->findOrFail($id);
         $slideshow->restore();
-        // If the parent album was trashed, restore it as well
+
         $album = Album::withTrashed()->find($slideshow->album_id);
         if ($album && $album->trashed()) {
             $album->restore();
@@ -89,45 +99,52 @@ class SlideshowController extends Controller
     }
 
     /**
-     * DESTROY: Soft delete a slideshow
+     * RESTORE ALBUM: Restore all items in an album from trash
+     */
+    public function restoreAlbum(Request $request)
+    {
+        $albumId = $request->album_id;
+        Slideshow::onlyTrashed()->where('album_id', $albumId)->restore();
+        
+        $album = Album::withTrashed()->find($albumId);
+        if ($album && $album->trashed()) { $album->restore(); }
+
+        return back()->with('status', 'Album items restored!')->with('last_tab', 'trash');
+    }
+
+    /**
+     * DESTROY: Soft delete
      */
     public function destroy(Slideshow $slideshow)
     {
         $album = $slideshow->album;
-
         $slideshow->delete();
 
-        // If the album has no more non-trashed slides, move the album to Recycle Bin
         if ($album && $album->slides()->count() === 0) {
             $album->delete();
         }
 
-        return back()->with('status', 'Photo moved to Recycle Bin.')->with('last_tab', 'manage');
+        return back()->with('status', 'Moved to Recycle Bin.')->with('last_tab', 'manage');
     }
 
-    public function toggle(Slideshow $slideshow)
+    /**
+     * FORCE DELETE: Permanent removal
+     */
+    public function forceDelete($id)
     {
-        $slideshow->is_active = !$slideshow->is_active;
-        $slideshow->save();
-        return back()->with('status', 'Visibility updated!');
+        $slide = Slideshow::onlyTrashed()->findOrFail($id);
+
+        if ($slide->image_path && Storage::disk('public')->exists($slide->image_path)) {
+            Storage::disk('public')->delete($slide->image_path);
+        }
+
+        $slide->forceDelete();
+        return back()->with('status', 'Permanently removed.');
     }
 
- public function forceDelete($id)
-{
-    // FIX: You must include onlyTrashed() to find the record!
-    $slide = \App\Models\Slideshow::onlyTrashed()->findOrFail($id);
-
-    // Delete the file from storage
-    if ($slide->image_path && \Storage::disk('public')->exists($slide->image_path)) {
-        \Storage::disk('public')->delete($slide->image_path);
-    }
-
-    // Permanently remove from DB
-    $slide->forceDelete();
-
-    return back()->with('status', 'Item permanently removed.');
-}
-
+    /**
+     * SETTINGS: Update duration and effects
+     */
     public function updateSettings(Request $request) 
     {
         $request->validate([

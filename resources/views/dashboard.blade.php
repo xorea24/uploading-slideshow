@@ -331,35 +331,57 @@
                     </div>
                 </div>
 
-                {{-- Photo Grid --}}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-                    @forelse($groupedSlides as $slide)
-                        <div class="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm group transition hover:border-red-200">
-                            <div class="relative">
-                                <img src="{{ asset('storage/' . $slide->image_path) }}" 
-                                    class="w-full h-32 object-cover group-hover:opacity-80 transition duration-300"
-                                    alt="{{ $slide->title }}">
-                            </div>
-                            <div class="p-3">
-                                <div class="flex gap-2">
-                                    <form action="{{ route('slideshow.toggle', $slide->id) }}" method="POST" class="flex-1">
-                                        @csrf @method('PATCH')
-                                        <button class="w-full py-1.5 {{ $slide->is_active ? 'bg-yellow-600' : 'bg-green-600' }} text-white text-[10px] font-bold rounded-lg transition">
-                                            {{ $slide->is_active ? 'HIDE' : 'SHOW' }}
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('slideshow.destroy', $slide->id) }}" method="POST">
-                                        @csrf @method('DELETE')
-                                        <button class="p-1.5 text-red-500 hover:bg-red-50 border border-red-100 rounded-lg">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="col-span-full text-center py-4 text-gray-400 italic text-sm">No photos in this album.</div>
-                    @endforelse
+               {{-- Photo Grid --}}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+    @forelse($groupedSlides as $slide)
+        <div class="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm group transition hover:border-red-200">
+            <div class="relative">
+                <img src="{{ asset('storage/' . $slide->image_path) }}" 
+                    class="w-full h-32 object-cover group-hover:opacity-80 transition duration-300"
+                    alt="{{ $slide->title }}">
+                
+                {{-- Status Badge overlay (Optional) --}}
+                <div class="absolute top-2 right-2">
+                    <span class="px-2 py-0.5 rounded-md text-[8px] font-bold uppercase {{ $slide->is_active ? 'bg-green-500/80 text-white' : 'bg-gray-500/80 text-white' }}">
+                        {{ $slide->is_active ? 'Visible' : 'Hidden' }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="p-3">
+                {{-- NEW: Image Title & Description --}}
+                <div class="mb-3">
+                    <h4 class="text-xs font-bold text-gray-800 truncate" title="{{ $slide->title}}">
+                        {{ $slide->title }}
+                    </h4>
+                    @if($slide->description)
+                        <p class="text-[10px] text-gray-500 line-clamp-1 mt-0.5">
+                            {{ $slide->description }}
+                        </p>
+                    @else
+                        <p class="text-[10px] text-gray-400 italic mt-0.5">No description</p>
+                    @endif
+                </div>
+
+                <div class="flex gap-2">
+                    <form action="{{ route('slideshow.toggle', $slide->id) }}" method="POST" class="flex-1">
+                        @csrf @method('PATCH')
+                        <button class="w-full py-1.5 {{ $slide->is_active ? 'bg-yellow-600' : 'bg-green-600' }} text-white text-[10px] font-bold rounded-lg transition">
+                            {{ $slide->is_active ? 'HIDE' : 'SHOW' }}
+                        </button>
+                    </form>
+                    <form action="{{ route('slideshow.destroy', $slide->id) }}" method="POST">
+                        @csrf @method('DELETE')
+                        <button class="p-1.5 text-red-500 hover:bg-red-50 border border-red-100 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @empty
+        <div class="col-span-full text-center py-4 text-gray-400 italic text-sm">No photos in this album.</div>
+    @endforelse
                 </div>
             </div>
         @empty
