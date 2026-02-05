@@ -15,12 +15,15 @@ class SlideshowController extends Controller
      */
     public function index() 
     {
-        // Kinukuha ang albums kasama ang slides nila (Eager Loading)
-        $albums = Album::with(['slides' => function($query) {
-            $query->orderBy('created_at', 'desc');
-        }])->get();
+        // 2. PASTE THE NEW CODE HERE:
+    $albums = Album::with(['slides' => function($query) {
+        $query->latest(); 
+    }])->latest()->get();
+
+        // Get the latest uploaded slide globally
+        $latestUpload = Slideshow::with('album')->orderBy('created_at', 'desc')->first();
         
-        // Ipapasa sa view (Dapat 'dashboard' ang file name mo)
+         // 3. This returns the data to your HTML (Blade) file
         return view('dashboard', compact('albums'));
     }
 
@@ -32,6 +35,7 @@ class SlideshowController extends Controller
         $request->validate([
             'album_id' => 'required', // Pwedeng ID or string "new"
             'new_album_name' => 'required_if:album_id,new|max:255',
+            'new_album_desc' => 'nullable|string|max:1000',
             'images' => 'required',
             'images.*' => 'image|mimes:jpeg,png,jpg|max:5120' // 5MB limit
         ]);
@@ -40,7 +44,10 @@ class SlideshowController extends Controller
         $albumId = $request->album_id;
 
         if ($albumId === 'new') {
-            $album = Album::create(['name' => $request->new_album_name]);
+            $album = Album::create([
+                'name' => $request->new_album_name,
+                'description' => $request->new_album_desc ?? null,
+            ]);
             $albumId = $album->id;
         }
 
@@ -57,7 +64,10 @@ class SlideshowController extends Controller
             }
         }
 
-        return back()->with('status', 'Photos uploaded successfully!')->with('last_tab', 'upload');
+        return back()
+            ->with('status', 'Photos uploaded successfully!')
+            ->with('last_tab', 'manage')
+            ->with('last_album', $albumId);
     }
 
 
@@ -102,34 +112,21 @@ class SlideshowController extends Controller
         return back()->with('status', 'Visibility updated!');
     }
 
-    public function forceDelete($id)
-    {
-        $slideshow = Slideshow::withTrashed()->findOrFail($id);
-        // Delete file from storage if exists
-        if ($slideshow->image_path && Storage::disk('public')->exists($slideshow->image_path)) {
-            Storage::disk('public')->delete($slideshow->image_path);
-        }
+ public function forceDelete($id)
+{
+    // FIX: You must include onlyTrashed() to find the record!
+    $slide = \App\Models\Slideshow::onlyTrashed()->findOrFail($id);
 
-        $albumId = $slideshow->album_id;
-
-        $slideshow->forceDelete();
-
-        // If the album exists (possibly trashed) and has no remaining slides (including trashed), remove the album as well
-        $album = Album::withTrashed()->find($albumId);
-        if ($album) {
-            $remaining = Slideshow::withTrashed()->where('album_id', $album->id)->count();
-            if ($remaining === 0) {
-                if ($album->trashed()) {
-                    $album->forceDelete();
-                } else {
-                    // If album somehow wasn't trashed, soft-delete it to keep consistent UX
-                    $album->delete();
-                }
-            }
-        }
-
-        return back()->with('status', 'Deleted permanently.')->with('last_tab', 'trash');
+    // Delete the file from storage
+    if ($slide->image_path && \Storage::disk('public')->exists($slide->image_path)) {
+        \Storage::disk('public')->delete($slide->image_path);
     }
+
+    // Permanently remove from DB
+    $slide->forceDelete();
+
+    return back()->with('status', 'Item permanently removed.');
+}
 
     public function updateSettings(Request $request) 
     {

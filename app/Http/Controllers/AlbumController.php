@@ -60,10 +60,8 @@ class AlbumController extends Controller
     /**
      * Permanently delete album contents
      */
-    public function forceDeleteAlbum(Request $request)
+    public function forceDeleteAlbum($albumId)
     {
-        $albumId = $request->input('album_id');
-        
         $slides = Slideshow::onlyTrashed()->where('album_id', $albumId)->get();
         
         foreach ($slides as $slide) {

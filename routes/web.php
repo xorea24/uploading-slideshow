@@ -34,7 +34,7 @@ Route::prefix('admin/albums')->middleware('auth')->group(function () {
     
     // Recycle Bin Actions for Albums
     Route::patch('/restore-album', [AlbumController::class, 'restoreAlbum'])->name('slideshow.restore-album');
-    Route::delete('/force-delete-album', [AlbumController::class, 'forceDeleteAlbum'])->name('slideshow.delete-album');
+    Route::delete('/{albumId}/force-delete', [AlbumController::class, 'forceDeleteAlbum'])->name('slideshow.delete-album');
 });
 
 /**
@@ -67,14 +67,28 @@ Route::get('/api/get-latest-settings', function () {
  * PUBLIC FACING VIEWS
  */
 Route::get('/', function () {
-    $slides = Slideshow::where('is_active', true)->orderBy('created_at', 'desc')->get();
+    $displayAlbum = DB::table('settings')->where('key', 'display_album_id')->value('value') ?? 'all';
+
+    if ($displayAlbum === 'all' || $displayAlbum === null) {
+        $slides = Slideshow::where('is_active', true)->orderBy('created_at', 'desc')->get();
+    } else {
+        $slides = Slideshow::where('is_active', true)->where('album_id', $displayAlbum)->orderBy('created_at', 'desc')->get();
+    }
+
     return view('public', compact('slides'));
 });
 
 Route::get('/public-slideshow', function () {
-    $slides = Slideshow::where('is_active', true)->get();
+    $displayAlbum = DB::table('settings')->where('key', 'display_album_id')->value('value') ?? 'all';
     $duration = DB::table('settings')->where('key', 'slide_duration')->value('value') ?? 5;
     $effect = DB::table('settings')->where('key', 'transition_effect')->value('value') ?? 'fade';
+
+    if ($displayAlbum === 'all' || $displayAlbum === null) {
+        $slides = Slideshow::where('is_active', true)->orderBy('created_at', 'desc')->get();
+    } else {
+        $slides = Slideshow::where('is_active', true)->where('album_id', $displayAlbum)->orderBy('created_at', 'desc')->get();
+    }
+
     return view('public-slideshow', compact('slides', 'duration', 'effect'));
 });
 

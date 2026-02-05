@@ -19,6 +19,7 @@ public function getLatestData() {
     $request->validate([
         'slide_duration' => 'required|integer|min:1|max:60',
         'transition_effect' => 'required|string',
+        'display_album_id' => 'nullable',
     ]);
 
     // Update or Insert the Duration
@@ -32,6 +33,14 @@ public function getLatestData() {
         ['key' => 'transition_effect'],
         ['value' => $request->transition_effect, 'updated_at' => now()]
     );
+
+    // Update or Insert the Display Album (allow 'all' or numeric album id)
+    if ($request->has('display_album_id')) {
+        \DB::table('settings')->updateOrInsert(
+            ['key' => 'display_album_id'],
+            ['value' => $request->display_album_id, 'updated_at' => now()]
+        );
+    }
 
     return back()->with('status', 'Slideshow settings updated successfully!');
     }
