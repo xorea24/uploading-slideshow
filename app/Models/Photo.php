@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; // 1. Import SoftDeletes trait
 
-class Slideshow extends Model
+class Photo extends Model
 {
     use HasFactory;
 

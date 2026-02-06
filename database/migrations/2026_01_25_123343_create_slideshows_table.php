@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('slideshows', function (Blueprint $table) {
+        Schema::create('PhotosController', function (Blueprint $table) {
             $table->id();
             $table->string('category_name'); // Siguraduhing mayroon nito
             $table->string('image_path');
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('slideshows');
+        Schema::dropIfExists('PhotosController');
     }
 };

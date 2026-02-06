@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Slideshow;
+use App\Models\Photo;
 use App\Models\Album;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 
-class SlideshowController extends Controller
+class PhotosController extends Controller
 {
     /**
      * INDEX: Display albums and slides
@@ -50,7 +50,7 @@ class SlideshowController extends Controller
             foreach ($request->file('images') as $image) {
                 $path = $image->store('slides', 'public');
 
-                Slideshow::create([
+                Photo::create([
                     'title' => pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME),
                     'image_path' => $path,
                     'is_active' => true,
@@ -59,16 +59,16 @@ class SlideshowController extends Controller
             }
         }
 
-        return back()->with('status', 'Photos uploaded successfully!')->with('last_tab', 'manage');
+        return back()->with('status', 'PhotosController uploaded successfully!')->with('last_tab', 'manage');
     }
 
     /**
      * TOGGLE: Switch visibility for a single slide
      */
-    public function toggle(Slideshow $slideshow)
+    public function toggle(Photo $Photo)
     {
-        $slideshow->is_active = !$slideshow->is_active;
-        $slideshow->save();
+        $Photo->is_active = !$Photo->is_active;
+        $Photo->save();
         return back()->with('status', 'Visibility updated!');
     }
 
@@ -88,10 +88,10 @@ class SlideshowController extends Controller
      */
     public function restore($id)
     {
-        $slideshow = Slideshow::withTrashed()->findOrFail($id);
-        $slideshow->restore();
+        $Photo = Photo::withTrashed()->findOrFail($id);
+        $Photo->restore();
 
-        $album = Album::withTrashed()->find($slideshow->album_id);
+        $album = Album::withTrashed()->find($Photo->album_id);
         if ($album && $album->trashed()) {
             $album->restore();
         }
@@ -105,7 +105,7 @@ class SlideshowController extends Controller
     public function restoreAlbum(Request $request)
     {
         $albumId = $request->album_id;
-        Slideshow::onlyTrashed()->where('album_id', $albumId)->restore();
+        Photo::onlyTrashed()->where('album_id', $albumId)->restore();
         
         $album = Album::withTrashed()->find($albumId);
         if ($album && $album->trashed()) { $album->restore(); }
@@ -116,10 +116,10 @@ class SlideshowController extends Controller
     /**
      * DESTROY: Soft delete
      */
-    public function destroy(Slideshow $slideshow)
+    public function destroy(Photo $Photo)
     {
-        $album = $slideshow->album;
-        $slideshow->delete();
+        $album = $Photo->album;
+        $Photo->delete();
 
         if ($album && $album->slides()->count() === 0) {
             $album->delete();
@@ -133,7 +133,7 @@ class SlideshowController extends Controller
      */
     public function forceDelete($id)
     {
-        $slide = Slideshow::onlyTrashed()->findOrFail($id);
+        $slide = Photo::onlyTrashed()->findOrFail($id);
 
         if ($slide->image_path && Storage::disk('public')->exists($slide->image_path)) {
             Storage::disk('public')->delete($slide->image_path);

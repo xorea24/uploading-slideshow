@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('slideshows', function (Blueprint $table) {
+        Schema::table('PhotosController', function (Blueprint $table) {
             $table->string('category_name')->after('id');
         });
     }
@@ -25,7 +25,7 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('slideshows', function (Blueprint $table) {
+        Schema::table('PhotosController', function (Blueprint $table) {
             $table->dropColumn('category_name');
         });
     }

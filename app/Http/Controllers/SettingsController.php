@@ -42,6 +42,6 @@ public function getLatestData() {
         );
     }
 
-    return back()->with('status', 'Slideshow settings updated successfully!');
+    return back()->with('status', 'Photo settings updated successfully!');
     }
 }

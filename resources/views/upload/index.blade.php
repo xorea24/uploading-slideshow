@@ -1,7 +1,7 @@
 <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 mb-8">
     <h4 class="text-xl font-bold text-gray-900 mb-4">Upload New Slide</h4>
     
-    <form action="{{ route('slideshow.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+    <form action="{{ route('Photo.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
         @csrf
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -17,7 +17,7 @@
         </div>
         
         <button type="submit" class="bg-[#0a0a14] text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 transition">
-            Upload to Slideshow
+            Upload to Photo
         </button>
     </form>
 </div>

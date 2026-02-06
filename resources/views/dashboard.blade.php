@@ -1,6 +1,6 @@
 <!-- ============================================================ -->
 <!-- ADMIN DASHBOARD - MAYOR'S OFFICE                            -->
-<!-- Slideshow Management System                                 -->
+<!-- Photo Management System                                 -->
 <!-- ============================================================ -->
 
 <!DOCTYPE html>
@@ -118,7 +118,7 @@
             </svg>
             Recycle Bin
             <span class="ml-auto bg-white text-red-950 text-[10px] px-2 py-0.5 rounded-full font-bold">
-                {{ \App\Models\Slideshow::onlyTrashed()->count() }}
+                {{ \App\Models\Photo::onlyTrashed()->count() }}
             </span>
         </a>
 
@@ -185,7 +185,7 @@
             <!-- ============================================================ -->
           <div x-show="tab === 'upload'" x-cloak x-transition>
     <div class="max-w-5xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-        <form action="{{ route('slideshow.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <form action="{{ route('Photo.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
@@ -252,7 +252,7 @@
 
       <!-- ============================================================ -->
       <!-- MANAGE ALBUMS TAB CONTENT                                    -->
-      <!-- Display, search, edit & manage photo albums                 -->
+      <!-- Display, search, edit & manage Photo albums                 -->
       <!-- ============================================================ -->
    <div x-show="tab === 'manage'" x-cloak x-transition>
     <div class="max-w-6xl mx-auto px-4 pb-20">
@@ -283,7 +283,7 @@
     x-data="{ 
         myIndex: {{ $albumIndex }},
         localCategory: '{{ addslashes($album->name) }}',
-        photoSearch: ''
+        PhotoSearch: ''
          }"
          x-show="(search === '' || localCategory.toLowerCase().includes(search.toLowerCase())) && (myIndex > (page - 1) * perPage && myIndex <= page * perPage)"
          x-transition:enter="transition ease-out duration-300">
@@ -300,7 +300,7 @@
                     </button>
                 </div>
                 <div class="flex items-center gap-3">
-                    <p class="text-xs text-gray-500">{{ $groupedSlides->count() }} total photos</p>
+                    <p class="text-xs text-gray-500">{{ $groupedSlides->count() }} total Photos</p>
                 </div>
             </div>
             
@@ -312,7 +312,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </span>
-                    <input type="text" x-model="photoSearch" placeholder="Search photos..." 
+                    <input type="text" x-model="PhotoSearch" placeholder="Search Photos..." 
                            class="pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:ring-1 focus:ring-red-500 outline-none w-32 md:w-48 transition-all">
                 </div>
 
@@ -335,7 +335,7 @@
         {{-- Photo Grid with Filtering --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
             @forelse($groupedSlides as $slide)
-                <div x-show="photoSearch === '' || '{{ addslashes($slide->title) }}'.toLowerCase().includes(photoSearch.toLowerCase()) || '{{ addslashes($slide->description) }}'.toLowerCase().includes(photoSearch.toLowerCase())"
+                <div x-show="PhotoSearch === '' || '{{ addslashes($slide->title) }}'.toLowerCase().includes(PhotoSearch.toLowerCase()) || '{{ addslashes($slide->description) }}'.toLowerCase().includes(PhotoSearch.toLowerCase())"
                      x-transition
                      class="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm group transition hover:border-red-200">
                     
@@ -366,13 +366,13 @@
                         </div>
 
                         <div class="flex gap-2">
-                            <form action="{{ route('slideshow.toggle', $slide->id) }}" method="POST" class="flex-1">
+                            <form action="{{ route('Photo.toggle', $slide->id) }}" method="POST" class="flex-1">
                                 @csrf @method('PATCH')
                                 <button class="w-full py-1.5 {{ $slide->is_active ? 'bg-yellow-600' : 'bg-green-600' }} text-white text-[10px] font-bold rounded-lg transition">
                                     {{ $slide->is_active ? 'HIDE' : 'SHOW' }}
                                 </button>
                             </form>
-                            <form action="{{ route('slideshow.destroy', $slide->id) }}" method="POST">
+                            <form action="{{ route('Photo.destroy', $slide->id) }}" method="POST">
                                 @csrf @method('DELETE')
                                 <button class="p-1.5 text-red-500 hover:bg-red-50 border border-red-100 rounded-lg">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -382,7 +382,7 @@
                     </div>
                 </div>
             @empty
-                <div class="col-span-full text-center py-4 text-gray-400 italic text-sm">No photos in this album.</div>
+                <div class="col-span-full text-center py-4 text-gray-400 italic text-sm">No Photos in this album.</div>
             @endforelse
         </div>
     </div>
@@ -422,7 +422,7 @@
             </p>
         </div>
 
-        @forelse(\App\Models\Slideshow::onlyTrashed()->get()->groupBy('album_id') as $albumId => $trashedSlides)
+        @forelse(\App\Models\Photo::onlyTrashed()->get()->groupBy('album_id') as $albumId => $trashedSlides)
             @php $album = \App\Models\Album::withTrashed()->find($albumId); @endphp
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
                  x-show="trashSearch === '' || '{{ $album ? strtolower($album->name) : 'deleted' }}'.includes(trashSearch.toLowerCase())">
@@ -433,7 +433,7 @@
                     </h3>
             
                     <div class="flex items-center gap-2">
-                    <form action="{{ route('slideshow.restore-album') }}" method="POST">
+                    <form action="{{ route('Photo.restore-album') }}" method="POST">
                                 @csrf
                                 @method('PATCH')
                                 <input type="hidden" name="album_id" value="{{ $albumId }}">
@@ -442,7 +442,7 @@
                                 </button>
                             </form>
 
-                        <form action="{{ route('slideshow.delete-album', $albumId) }}" method="POST"
+                        <form action="{{ route('Photo.delete-album', $albumId) }}" method="POST"
                           onsubmit="return confirm('Are you sure? This will Be permanently deleted.')">
                             
                             @csrf @method('DELETE')
@@ -472,7 +472,7 @@
 
                             <div class="p-3 space-y-2">
                                 <div class="flex gap-2">
-                                    <form action="{{ route('slideshow.restore', $trash->id) }}" method="POST" class="flex-1">
+                                    <form action="{{ route('Photo.restore', $trash->id) }}" method="POST" class="flex-1">
                                         @csrf @method('PATCH')
                                    <button class="w-full py-1.5 bg-green-600 text-white text-[10px] font-bold rounded-lg hover:bg-green-700 transition shadow-sm active:scale-95 flex items-center justify-center gap-1">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -481,7 +481,7 @@
                                     </button>
                                     </form>
                                     
-                                    <form action="{{ route('slideshow.force-delete', $trash->id) }}" 
+                                    <form action="{{ route('Photo.force-delete', $trash->id) }}" 
                                         method="POST" 
                                         onsubmit="return confirm('Permanently delete this image? This cannot be undone.')"
                                         class="flex-1">
@@ -512,7 +512,7 @@
 
                 <!-- ============================================================ -->
                 <!-- SETTINGS TAB CONTENT                                        -->
-                <!-- Configure slideshow duration & transition effects           -->
+                <!-- Configure Photo duration & transition effects           -->
                 <!-- ============================================================ -->
     <div x-show="tab === 'settings'" x-cloak x-transition:enter="transition ease-out duration-300">
     <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
@@ -534,7 +534,7 @@
                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none transition pr-12">
                         <span class="absolute right-4 top-3.5 text-gray-400 text-sm font-bold">sec</span>
                     </div>
-                    <p class="text-[10px] text-gray-400 font-medium">Controls the speed of the slideshow.</p>
+                    <p class="text-[10px] text-gray-400 font-medium">Controls the speed of the Photo.</p>
                 </div>
 
                 <div class="space-y-2">
@@ -587,7 +587,7 @@
             <div class="p-3">
                 <div class="flex gap-2">
                     {{-- Toggle Visibility Button --}}
-                    <form action="{{ route('slideshow.toggle', $slide->id) }}" method="POST" class="flex-1">
+                    <form action="{{ route('Photo.toggle', $slide->id) }}" method="POST" class="flex-1">
                         @csrf @method('PATCH')
                         
                         <button x-show="!{{ $slide->is_active }}" 
@@ -604,7 +604,7 @@
                     </form>
 
                     {{-- Delete Button --}}
-                    <form action="{{ route('slideshow.destroy', $slide->id) }}" method="POST">
+                    <form action="{{ route('Photo.destroy', $slide->id) }}" method="POST">
                         @csrf @method('DELETE')
                         <button class="p-1.5 text-red-500 hover:bg-red-50 border border-red-100 rounded-lg transition active:scale-95" title="Move to trash">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -615,12 +615,12 @@
         </div>
     @empty
         <div class="col-span-full text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-            <p class="text-gray-400 italic text-sm">No photos in this album.</p>
+            <p class="text-gray-400 italic text-sm">No Photos in this album.</p>
         </div>
     @endforelse
 </div>
 
-                    <p class="text-[10px] text-gray-400 font-medium mt-2">Click "Show" to display this album in the slideshow, or "Hide" to deselect it.</p>
+                    <p class="text-[10px] text-gray-400 font-medium mt-2">Click "Show" to display this album in the Photo, or "Hide" to deselect it.</p>
                 </div>
             </div>
 
@@ -629,7 +629,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
-                    Preview Slideshow
+                    Preview Photo
                 </a>
                 <button type="submit" class="bg-red-700 text-white px-10 py-3 rounded-xl font-bold hover:bg-red-800 transition">
                     Save Settings

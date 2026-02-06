@@ -17,7 +17,7 @@ class Album extends Model
      */
     public function slides()
     {
-        return $this->hasMany(Slideshow::class, 'album_id');
+        return $this->hasMany(Photo::class, 'album_id');
     }
 
     /**

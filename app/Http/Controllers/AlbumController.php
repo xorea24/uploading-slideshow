@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Album;
-use App\Models\Slideshow;
+use App\Models\Photo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage; // Added this import
 use App\Http\Controllers\AlbumController;
@@ -65,7 +65,7 @@ public function upload(Request $request)
     public function destroy(Album $album)
     {
         // Soft delete all slides in this album
-        Slideshow::where('album_id', $album->id)->delete();
+        Photo::where('album_id', $album->id)->delete();
 
         // Soft delete the album itself
         $album->delete();
@@ -85,7 +85,7 @@ public function upload(Request $request)
             $album->restore();
         }
 
-        Slideshow::onlyTrashed()
+        Photo::onlyTrashed()
             ->where('album_id', $albumId)
             ->restore();
 
@@ -100,7 +100,7 @@ public function upload(Request $request)
      */
     public function forceDeleteAlbum($albumId)
     {
-        $slides = Slideshow::onlyTrashed()->where('album_id', $albumId)->get();
+        $slides = Photo::onlyTrashed()->where('album_id', $albumId)->get();
         
         foreach ($slides as $slide) {
             if ($slide->image_path && Storage::disk('public')->exists($slide->image_path)) {
