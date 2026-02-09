@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
-
+use Illuminate\Support\Facades\Validator;
 class AuthController extends Controller
 {
     /**
@@ -13,7 +13,7 @@ class AuthController extends Controller
      */
    public function login(Request $request)
 {
-    $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+    $validator = Validator::make($request->all(), [
         'email' => ['required', 'email'],
         'password' => ['required'],
     ]);

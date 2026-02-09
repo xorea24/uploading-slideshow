@@ -6,11 +6,20 @@ use Illuminate\Support\Facades\DB;
 
 class SettingsController extends Controller
 {
+
+public function getLatestData() {
+    return response()->json([
+        'seconds' => \DB::table('settings')->where('key', 'slide_duration')->value('value') ?? 5,
+        'effect' => \DB::table('settings')->where('key', 'transition_effect')->value('value') ?? 'fade',
+        'last_update' => \DB::table('settings')->max('updated_at'), // Mahalaga ito!
+    ]);
+}
     public function update(Request $request)
 {
     $request->validate([
         'slide_duration' => 'required|integer|min:1|max:60',
         'transition_effect' => 'required|string',
+        'display_album_id' => 'nullable',
     ]);
 
     // Update or Insert the Duration
@@ -25,6 +34,14 @@ class SettingsController extends Controller
         ['value' => $request->transition_effect, 'updated_at' => now()]
     );
 
-    return back()->with('status', 'Slideshow settings updated successfully!');
+    // Update or Insert the Display Album (allow 'all' or numeric album id)
+    if ($request->has('display_album_id')) {
+        \DB::table('settings')->updateOrInsert(
+            ['key' => 'display_album_id'],
+            ['value' => $request->display_album_id, 'updated_at' => now()]
+        );
+    }
+
+    return back()->with('status', 'Photo settings updated successfully!');
     }
 }

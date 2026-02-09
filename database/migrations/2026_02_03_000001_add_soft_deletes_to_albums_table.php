@@ -13,9 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('PhotosController', function (Blueprint $table) {
-            $table->string('category_name')->after('id');
-        });
+        if (Schema::hasTable('albums')) {
+            Schema::table('albums', function (Blueprint $table) {
+                $table->softDeletes();
+            });
+        }
     }
 
     /**
@@ -25,8 +27,10 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('PhotosController', function (Blueprint $table) {
-            $table->dropColumn('category_name');
-        });
+        if (Schema::hasTable('albums')) {
+            Schema::table('albums', function (Blueprint $table) {
+                $table->dropSoftDeletes();
+            });
+        }
     }
 };
