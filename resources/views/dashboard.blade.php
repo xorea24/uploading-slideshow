@@ -30,22 +30,22 @@
 <!-- ============================================================ -->
 <!-- MAIN BODY - Dashboard Container                             -->
 <!-- ============================================================ -->
-<body class="bg-gray-50 font-sans" 
-    x-data="{ 
-        tab: '{{ session('last_tab') ?? (session('status') ? 'manage' : 'upload') }}', 
+<body class="bg-gray-50 font-sans"
+    x-data="{
+        tab: '{{ session('last_tab') ?? (session('status') ? 'manage' : 'upload') }}',
         sidebarOpen: false,
-        search: '', 
+        search: '',
         page: 1,
         perPage: 10,
         isNewAlbum: false,
-        
+
         // --- NEW DATA FOR MULTI-UPLOAD ---
         uploadRows: [{ id: Date.now(), name: '', desc: '', file: null, preview: null }],
-        
+
         addPhotoRow() {
             this.uploadRows.push({ id: Date.now(), name: '', desc: '', file: null, preview: null });
         },
-        
+
         removePhotoRow(index) {
             this.uploadRows.splice(index, 1);
         },
@@ -58,11 +58,41 @@
             }
         },
         // --------------------------------
-        
+
+        // --- SETTINGS DATA ---
+        albumSearch: '',
+        availableAlbums: [
+            @foreach($albums as $album)
+                { id: {{ $album->id }}, name: '{{ addslashes($album->name) }}' },
+            @endforeach
+        ],
+        activeAlbums: [],
+
+        init() {
+            let rawSavedValue = '{{ $settings['display_album_ids'] ?? '' }}';
+            let savedIds = rawSavedValue
+                ? rawSavedValue.split(',').map(id => id.trim()).filter(id => id !== '')
+                : [];
+            this.activeAlbums = this.availableAlbums.filter(a => savedIds.includes(a.id.toString()));
+            this.availableAlbums = this.availableAlbums.filter(a => !savedIds.includes(a.id.toString()));
+        },
+
+        moveToActive(album) {
+            this.activeAlbums.push(album);
+            this.availableAlbums = this.availableAlbums.filter(a => a.id !== album.id);
+        },
+
+        moveToAvailable(album) {
+            this.availableAlbums.push(album);
+            this.activeAlbums = this.activeAlbums.filter(a => a.id !== album.id);
+        },
+        // --------------------
+
         get totalVisible() { return document.querySelectorAll('.album-card').length; },
         get totalPages() { return Math.ceil(this.totalVisible / this.perPage) || 1; },
         trashSearch: ''
-    }">
+    }"
+    x-init="init()">
     <div class="flex min-h-screen">
         <!-- ============================================================ -->
         <!-- MOBILE MENU TOGGLE BUTTON                                    -->
@@ -380,9 +410,8 @@
 
                         <form x-ref="editPhotoForm_{{ $slide->id }}" action="{{ route('Photo.update', $slide->id) }}" method="POST" class="hidden">
                             @csrf @method('PATCH')
-                            <input type="hidden" name="name" x-ref="editTitleInput_{{ $slide->id }}" value="{{ $slide->name }}">
+                            <input type="hidden" name="name" x-ref="editTitleInput_{{ $slide->id }}" value="{{ $slide->category_name }}">
                             <input type="hidden" name="description" x-ref="editDescInput_{{ $slide->id }}" value="{{ $slide->description }}">
-                        </form>
                     </div>
 
                     <div class="flex gap-2">
@@ -557,42 +586,35 @@
                 <!-- Configure Photo duration & transition effects           -->
                 <!-- ============================================================ -->
 <div x-show="tab === 'settings'" x-cloak x-transition:enter="transition ease-out duration-300"
-   x-data="{
-    albumSearch: '',
-    // 1. Ensure this array is actually populating by checking page source
-    availableAlbums: [
-        @foreach($albums as $album)
-            { id: {{ $album->id }}, name: '{{ addslashes($album->name) }}' },
-        @endforeach
-    ],
-    activeAlbums: [],
-    
-    init() {
-        // 2. Fetch the raw string from Blade
-        let rawSavedValue = '{{ \DB::table('settings')->where('key', 'display_album_ids')->value('value') }}';
-        
-        // 3. Clean the string: split by comma, then trim spaces, then remove empty items
-        let savedIds = rawSavedValue 
-            ? rawSavedValue.split(',').map(id => id.trim()).filter(id => id !== '') 
-            : [];
-        
-        // 4. Move albums to active list if their ID is in the savedIds array
-        this.activeAlbums = this.availableAlbums.filter(a => savedIds.includes(a.id.toString()));
-        
-        // 5. Keep only albums NOT in the active list in availableAlbums
-        this.availableAlbums = this.availableAlbums.filter(a => !savedIds.includes(a.id.toString()));
-    },
+     x-data="{
+        albumSearch: '',
+        availableAlbums: [
+            @foreach($albums as $album)
+                { id: {{ $album->id }}, name: '{{ addslashes($album->name) }}' },
+            @endforeach
+        ],
+        activeAlbums: [],
 
-    moveToActive(album) {
-        this.activeAlbums.push(album);
-        this.availableAlbums = this.availableAlbums.filter(a => a.id !== album.id);
-    },
+        init() {
+            let rawSavedValue = '{{ $settings['display_album_ids'] ?? '' }}';
+            let savedIds = rawSavedValue
+                ? rawSavedValue.split(',').map(id => id.trim()).filter(id => id !== '')
+                : [];
+            this.activeAlbums = this.availableAlbums.filter(a => savedIds.includes(a.id.toString()));
+            this.availableAlbums = this.availableAlbums.filter(a => !savedIds.includes(a.id.toString()));
+        },
 
-    moveToAvailable(album) {
-        this.availableAlbums.push(album);
-        this.activeAlbums = this.activeAlbums.filter(a => a.id !== album.id);
-    }
-}">
+        moveToActive(album) {
+            this.activeAlbums.push(album);
+            this.availableAlbums = this.availableAlbums.filter(a => a.id !== album.id);
+        },
+
+        moveToAvailable(album) {
+            this.availableAlbums.push(album);
+            this.activeAlbums = this.activeAlbums.filter(a => a.id !== album.id);
+        }
+     }"
+     x-init="init()">
 
     <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
         <form action="{{ route('settings.update') }}" method="POST" class="space-y-8">

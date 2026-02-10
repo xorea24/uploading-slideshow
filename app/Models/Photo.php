@@ -14,9 +14,10 @@ class Photo extends Model
      * Ang mga attributes na ito ay pwedeng lagyan ng data nang sabay-sabay (Mass Assignment).
      */
     use SoftDeletes; // 2. Add this inside the class
-   
-// App\Models\Photo.php
-    protected $fillable = ['name', 'description', 'image_path', 'album_id', 'is_active'];
+
+    protected $table = 'photos'; // Match the migration table name
+
+    protected $fillable = ['category_name', 'description', 'image_path', 'album_id', 'is_active'];
 
     public function album()
    {

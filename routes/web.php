@@ -85,12 +85,13 @@ Route::get('/api/get-latest-settings', function () {
  * PUBLIC FACING VIEWS
  */
 Route::get('/', function () {
-    $displayAlbum = DB::table('settings')->where('key', 'display_album_id')->value('value') ?? 'all';
+    $displayAlbums = DB::table('settings')->where('key', 'display_album_ids')->value('value') ?? '';
 
-    if ($displayAlbum === 'all' || $displayAlbum === null) {
+    if ($displayAlbums === '' || $displayAlbums === null) {
         $slides = Photo::where('is_active', true)->orderBy('created_at', 'desc')->get();
     } else {
-        $slides = Photo::where('is_active', true)->where('album_id', $displayAlbum)->orderBy('created_at', 'desc')->get();
+        $albumIds = array_map('intval', explode(',', $displayAlbums));
+        $slides = Photo::where('is_active', true)->whereIn('album_id', $albumIds)->orderBy('created_at', 'desc')->get();
     }
 
     return view('public', compact('slides'));

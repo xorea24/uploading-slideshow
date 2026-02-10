@@ -4,7 +4,7 @@
     $effect = \DB::table('settings')->where('key', 'transition_effect')->value('value') ?? 'fade';
     
     // 2. Identify the image table
-    $imageTable = \Schema::hasTable('PhotosController') ? 'PhotosController' : (\Schema::hasTable('slides') ? 'slides' : 'albums');
+    $imageTable = \Schema::hasTable('photos') ? 'photos' : (\Schema::hasTable('slides') ? 'slides' : 'albums');
     
     // 3. Get the "Master Timestamp"
     $lastSettingUpdate = \DB::table('settings')->max('updated_at');
@@ -68,11 +68,6 @@
         <h2 class="text-white text-xl font-light tracking-[0.2em] uppercase animate-pulse">
             Updating Album...
         </h2>
-    </div>
-
-    <div class="absolute top-5 left-5 z-20 pointer-events-none">
-        <h1 class="text-white text-3xl font-bold drop-shadow-2xl">Mayor's Office Gallery</h1>
-        <p class="text-white text-sm drop-shadow-lg opacity-80">Live Photo Feed</p>
     </div>
 
     <div class="swiper mySwiper">

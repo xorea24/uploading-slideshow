@@ -70,6 +70,24 @@ class PhotosController extends Controller
     }
 
     /**
+     * UPDATE PHOTO: Update photo title and description
+     */
+    public function updatePhoto(Request $request, Photo $photo)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+        ]);
+
+        $photo->update([
+            'category_name' => $request->name,
+            'description' => $request->description,
+        ]);
+
+        return back()->with('status', 'Photo updated successfully!');
+    }
+
+    /**
      * SETTINGS: Update duration, effects, and active albums
      */
     public function update(Request $request)
@@ -84,7 +102,7 @@ class PhotosController extends Controller
         $settings = [
             'slide_duration' => $request->slide_duration,
             'transition_effect' => $request->transition_effect,
-            'display_album_ids' => $request->display_album_ids ?? '', 
+            'display_album_ids' => $request->display_album_ids ?? '',
         ];
 
         // 2. Loop and Update with Timestamps

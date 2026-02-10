@@ -13,9 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('PhotosController', function (Blueprint $table) {
+        Schema::create('photos', function (Blueprint $table) {
             $table->id();
-            $table->string('category_name'); // Siguraduhing mayroon nito
+            $table->foreignId('album_id')->constrained('albums')->onDelete('cascade');
+            $table->string('category_name');
+            $table->text('description')->nullable();
             $table->string('image_path');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
@@ -29,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('PhotosController');
+        Schema::dropIfExists('photos');
     }
 };

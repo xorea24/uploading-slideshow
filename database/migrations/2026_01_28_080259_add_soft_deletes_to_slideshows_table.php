@@ -13,14 +13,14 @@ return new class extends Migration
      */
   public function up()
 {
-    Schema::table('PhotosController', function (Blueprint $table) {
+    Schema::table('photos', function (Blueprint $table) {
         $table->softDeletes(); // Adds the 'deleted_at' column
     });
 }
 
 public function down()
 {
-    Schema::table('PhotosController', function (Blueprint $table) {
+    Schema::table('photos', function (Blueprint $table) {
         $table->dropSoftDeletes();
      });
    }
