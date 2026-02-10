@@ -1,14 +1,29 @@
 @php
-    // 1. Fetch Global Settings
-    $seconds = \DB::table('settings')->where('key', 'slide_duration')->value('value') ?? 5;
-    $effect = \DB::table('settings')->where('key', 'transition_effect')->value('value') ?? 'fade';
+    // 1. FETCH SETTINGS
+    $settings = \DB::table('settings')->get()->keyBy('key');
     
-    // 2. Identify the image table
-    $imageTable = \Schema::hasTable('photos') ? 'photos' : (\Schema::hasTable('slides') ? 'slides' : 'albums');
-    
-    // 3. Get the "Master Timestamp"
+    $seconds = $settings->get('slide_duration')->value ?? 5;
+    $effect = $settings->get('transition_effect')->value ?? 'fade';
+    $displayAlbumIds = $settings->get('display_album_ids')->value ?? '';
+
+    // Convert saved string "1,2,3" into an array
+    $albumIdArray = array_filter(explode(',', $displayAlbumIds));
+
+    // 2. FETCH SLIDES CONNECTED TO SELECTED ALBUMS
+    $slidesQuery = \DB::table('photos')
+        ->join('albums', 'photos.album_id', '=', 'albums.id')
+        ->select('photos.*', 'albums.name as album_title', 'albums.description as album_desc');
+
+    // Filter by albums selected in settings
+    if (!empty($albumIdArray)) {
+        $slidesQuery->whereIn('photos.album_id', $albumIdArray);
+    }
+
+    $slides = $slidesQuery->orderBy('photos.created_at', 'desc')->get();
+
+    // 3. MASTER TIMESTAMP (Para sa Auto-Reload)
     $lastSettingUpdate = \DB::table('settings')->max('updated_at');
-    $lastImageUpdate = \DB::table($imageTable)->max('updated_at');
+    $lastImageUpdate = \DB::table('photos')->max('updated_at');
     $masterTimestamp = max($lastSettingUpdate, $lastImageUpdate);
 @endphp
 
@@ -22,41 +37,42 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     
-    <style>
-        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background-color: black; }
-        .swiper { width: 100%; height: 100vh; }
-        .swiper-slide img { width: 100%; height: 100%; object-fit: cover; }
+   <style>
+    html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background-color: black; }
+    .swiper { width: 100%; height: 100vh; }
+    .swiper-slide img { width: 100%; height: 100%; object-fit: cover; }
 
-        .title-overlay {
-            position: absolute;
-            bottom: 10%;
-            left: 5%;
-            z-index: 10;
-        }
+    /* SIMPLE TOP OVERLAY */
+    .title-overlay {
+        position: absolute;
+        top: 30px;
+        left: 30px;
+        z-index: 100;
+        max-width: 80%;
+        pointer-events: none;
+    }
 
-        /* FIXED OVERLAY CSS */
-        #loading-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 9999; /* Ensure it is above Swiper */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: rgba(0, 0, 0, 0.95);
-            transition: opacity 0.7s ease-in-out;
-        }
+    .title-card {
+        padding: 15px 20px;
+        color: white;
+    }
 
-        .hidden-overlay {
-            opacity: 0 !important;
-            pointer-events: none !important;
-        }
-        
-        .visible-overlay {
-            opacity: 1 !important;
-            pointer-events: auto !important;
-        }
-    </style>
+    /* SIMPLE LOADING OVERLAY */
+    #loading-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: black;
+        color: white;
+        transition: opacity 0.5s;
+    }
+
+    .hidden-overlay { opacity: 0; pointer-events: none; }
+    .visible-overlay { opacity: 1; pointer-events: auto; }
+</style>
 </head>
 <body>
 
@@ -73,20 +89,33 @@
     <div class="swiper mySwiper">
         <div class="swiper-wrapper">
         @forelse($slides as $slide)
-            <div class="swiper-slide">
-                <img src="{{ asset('storage/' . $slide->image_path) }}" alt="{{ $slide->category_name }}">
-                <div class="title-overlay bg-black/40 text-white px-6 py-3 rounded-lg backdrop-blur-md border border-white/10">
-                    <h2 class="text-2xl font-bold">{{ $slide->category_name }}</h2>
-                    <p class="text-xs text-gray-300 uppercase tracking-widest">
-                        {{ $slide->created_at->format('M d, Y') }}
-                    </p>
+            <div class="swiper-slide relative">
+                <img src="{{ asset('storage/' . $slide->image_path) }}" alt="Slideshow Image">
+                
+                <div class="title-overlay">
+                    <div class="title-card">
+                        <h1 class="text-white text-5xl font-black uppercase tracking-tighter">
+                            {{ $slide->album_title }}
+                        </h1>
+                        @if($slide->album_desc)
+                            <p class="text-gray-200 text-lg mt-2 font-medium border-t border-white/10 pt-2">
+                                {{ $slide->album_desc }}
+                            </p>
+                        @endif
+                        <div class="mt-3 flex items-center gap-3">
+                            <span class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded">OFFICIAL</span>
+                            <span class="text-gray-400 text-xs uppercase tracking-widest">
+                                {{ date('M Y') }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
         @empty
             <div class="swiper-slide flex items-center justify-center bg-gray-900 text-white text-center">
                 <div>
-                    <p class="text-2xl font-bold mb-2">Gallery Empty</p>
-                    <p class="text-gray-400">Waiting for administrator to upload PhotosController...</p>
+                    <p class="text-2xl font-bold mb-2">No Albums Selected</p>
+                    <p class="text-gray-400">Go to Settings to select which albums to display.</p>
                 </div>
             </div>
         @endforelse
@@ -97,7 +126,7 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
     <script>
-    // 1. DATA REFRESH LOGIC
+    // 1. DATA REFRESH LOGIC (Auto-reloads when settings change)
     let currentUpdateTimestamp = "{{ $masterTimestamp }}";
 
     async function fetchLatestData() {
@@ -105,13 +134,11 @@
             const response = await fetch('/api/get-latest-settings?t=' + Date.now()); 
             const data = await response.json();
 
-            // Compare timestamps
             if (data.last_update && data.last_update > currentUpdateTimestamp) {
-                console.log("Change detected: Server " + data.last_update + " vs Local " + currentUpdateTimestamp);
                 showLoadingAndReload();
             }
         } catch (e) {
-            console.error("Update check failed.");
+            console.log("Check update failed, retrying later...");
         }
     }
 
@@ -119,14 +146,10 @@
         const overlay = document.getElementById('loading-overlay');
         overlay.classList.remove('hidden-overlay');
         overlay.classList.add('visible-overlay');
-
-        // Allow 2.5s for visual feedback before refreshing
-        setTimeout(() => {
-            window.location.reload();
-        }, 2500);
+        setTimeout(() => { window.location.reload(); }, 2000);
     }
 
-    // Check every 10 seconds
+    // Check every 10 seconds for database changes
     setInterval(fetchLatestData, 10000);
 
     // 2. SWIPER INITIALIZATION
@@ -143,7 +166,7 @@
         pagination: { el: ".swiper-pagination", clickable: true },
     };
 
-    // Effect Logic
+    // Apply Effects based on Settings
     if (effectSetting === 'fade') {
         swiperOptions.effect = 'fade';
         swiperOptions.fadeEffect = { crossFade: true };
@@ -165,13 +188,6 @@
             prev: { translate: ['100%', 0, 0] },
             next: { translate: ['-100%', 0, 0] },
         };
-    }
-    else if (effectSetting === 'zoom') {
-        swiperOptions.effect = 'fade';
-        // Apply Ken Burns style zoom via CSS rule injection
-        const style = document.createElement('style');
-        style.innerHTML = `.swiper-slide-active img { transform: scale(1.2); transition: transform ${slideDuration + 1000}ms linear !important; }`;
-        document.head.appendChild(style);
     }
 
     var swiper = new Swiper(".mySwiper", swiperOptions);

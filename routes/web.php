@@ -73,13 +73,14 @@ Route::post('/settings', [SettingsController::class, 'update'])->name('settings.
 
 Route::get('/api/get-latest-settings', function () {
     $lastSetting = DB::table('settings')->max('updated_at');
-    $lastImage = DB::table('PhotosController')->max('updated_at');
+    $lastImage = DB::table('photos')->max('updated_at');
     $lastAlbum = DB::table('albums')->max('updated_at'); // Isama ang album updates
-    
+
     return response()->json([
         'last_update' => max($lastSetting, $lastImage, $lastAlbum)
     ]);
 });
+
 
 /**
  * PUBLIC FACING VIEWS
