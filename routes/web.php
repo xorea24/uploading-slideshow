@@ -17,8 +17,15 @@ use App\Http\Controllers\AuthController;
 | Web Routes - Mayor's Office Photo System
 |--------------------------------------------------------------------------
 */
+// This is for the Slideshow frontend to check for changes
+Route::get('/settings/latest', [SettingsController::class, 'getLatestData']);
+
+Route::post('/settings/update', [SettingsController::class, 'update'])->name('settings.update');
+// Add this line to handle the photo updates (title and description)
+Route::patch('/photos/{photo}', [PhotosController::class, 'update'])->name('Photo.update');
 
 Route::post('/upload', [PhotosController::class, 'store']);
+
 Route::patch('/albums/{album}/toggle', [AlbumController::class, 'toggle'])->name('albums.toggle');
 /**
  * DASHBOARD

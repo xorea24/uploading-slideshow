@@ -1,47 +1,50 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class SettingsController extends Controller
 {
+    public function getLatestData() 
+    {
+        // Fetch everything in one go for better performance
+        $settings = DB::table('settings')->whereIn('key', ['slide_duration', 'transition_effect'])->pluck('value', 'key');
 
-public function getLatestData() {
-    return response()->json([
-        'seconds' => \DB::table('settings')->where('key', 'slide_duration')->value('value') ?? 5,
-        'effect' => \DB::table('settings')->where('key', 'transition_effect')->value('value') ?? 'fade',
-        'last_update' => \DB::table('settings')->max('updated_at'), // Mahalaga ito!
-    ]);
-}
-    public function update(Request $request)
+        return response()->json([
+            'seconds' => $settings['slide_duration'] ?? 5,
+            'effect' => $settings['transition_effect'] ?? 'fade',
+            // If updated_at is null, we return the current time so the slideshow knows to refresh
+            'last_update' => DB::table('settings')->max('updated_at') ?? Carbon::now()->toDateTimeString(),
+        ]);
+    }
+
+  public function update(Request $request)
 {
     $request->validate([
         'slide_duration' => 'required|integer|min:1|max:60',
         'transition_effect' => 'required|string',
-        'display_album_id' => 'nullable',
+        'display_album_ids' => 'nullable|string',
     ]);
 
-    // Update or Insert the Duration
-    \DB::table('settings')->updateOrInsert(
-        ['key' => 'slide_duration'],
-        ['value' => $request->slide_duration, 'updated_at' => now()]
-    );
+    $data = [
+        'slide_duration' => $request->slide_duration,
+        'transition_effect' => $request->transition_effect,
+        'display_album_ids' => $request->display_album_ids ?? '', 
+    ];
 
-    // Update or Insert the Effect
-    \DB::table('settings')->updateOrInsert(
-        ['key' => 'transition_effect'],
-        ['value' => $request->transition_effect, 'updated_at' => now()]
-    );
-
-    // Update or Insert the Display Album (allow 'all' or numeric album id)
-    if ($request->has('display_album_id')) {
+    foreach ($data as $key => $value) {
         \DB::table('settings')->updateOrInsert(
-            ['key' => 'display_album_id'],
-            ['value' => $request->display_album_id, 'updated_at' => now()]
+            ['key' => $key],
+            [
+                'value' => $value,
+                'updated_at' => \Carbon\Carbon::now() // CRITICAL for refresh detection
+            ]
         );
     }
 
-    return back()->with('status', 'Photo settings updated successfully!');
+    return back()->with('success', 'Settings updated!');
     }
 }

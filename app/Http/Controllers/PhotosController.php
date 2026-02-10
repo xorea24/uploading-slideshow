@@ -7,19 +7,26 @@ use App\Models\Album;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PhotosController extends Controller
 {
+
+
     /**
-     * INDEX: Display albums and slides
+     * INDEX: Display albums and slides on the Dashboard
      */
     public function index() 
     {
+        // Fetch all albums with their photos for the management tabs
         $albums = Album::with(['slides' => function($query) {
             $query->latest(); 
         }])->latest()->get();
 
-        return view('dashboard', compact('albums'));
+        // Also fetch the settings so the view can show current values
+        $settings = DB::table('settings')->pluck('value', 'key');
+
+      return view('dashboard', compact('albums', 'settings'));
     }
 
     /**
@@ -33,7 +40,6 @@ class PhotosController extends Controller
             'new_album_desc' => 'nullable|string|max:1000',
             'images' => 'required',
             'images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
-
         ]);
 
         $albumId = $request->album_id;
@@ -47,19 +53,52 @@ class PhotosController extends Controller
         }
 
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
+            foreach ($request->file('images') as $key => $image) {
                 $path = $image->store('slides', 'public');
 
                 Photo::create([
-                    'title' => pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME),
-                    'image_path' => $path,
-                    'is_active' => true,
-                    'album_id' => $albumId, 
+                    'album_id'    => $albumId,
+                    'image_path'  => $path,
+                    'name'        => $request->titles[$key] ?? 'Untitled', 
+                    'description' => $request->descriptions[$key] ?? null,
+                    'is_active'   => 1,
                 ]);
             }
         }
 
-        return back()->with('status', 'PhotosController uploaded successfully!')->with('last_tab', 'manage');
+        return back()->with('status', 'Photos uploaded successfully!')->with('last_tab', 'manage');
+    }
+
+    /**
+     * SETTINGS: Update duration, effects, and active albums
+     */
+    public function update(Request $request)
+    {
+        // 1. Validate the settings input
+        $request->validate([
+            'slide_duration' => 'required|integer|min:1|max:60',
+            'transition_effect' => 'required|string',
+            'display_album_ids' => 'nullable|string',
+        ]);
+
+        $settings = [
+            'slide_duration' => $request->slide_duration,
+            'transition_effect' => $request->transition_effect,
+            'display_album_ids' => $request->display_album_ids ?? '', 
+        ];
+
+        // 2. Loop and Update with Timestamps
+        foreach ($settings as $key => $value) {
+            DB::table('settings')->updateOrInsert(
+                ['key' => $key],
+                [
+                    'value' => $value,
+                    'updated_at' => Carbon::now() // Critical for your JSON update detection
+                ]
+            );
+        }
+
+        return back()->with('success', 'Settings saved successfully!');
     }
 
     /**
@@ -84,7 +123,23 @@ class PhotosController extends Controller
     }
 
     /**
-     * RESTORE: Single item
+     * DESTROY: Soft delete
+     */
+    public function destroy(Photo $Photo)
+    {
+        $album = $Photo->album;
+        $Photo->delete();
+
+        // Optional: delete album if it becomes empty
+        if ($album && $album->slides()->count() === 0) {
+            $album->delete();
+        }
+
+        return back()->with('status', 'Moved to Recycle Bin.')->with('last_tab', 'manage');
+    }
+
+    /**
+     * RESTORE: Single item from trash
      */
     public function restore($id)
     {
@@ -100,35 +155,6 @@ class PhotosController extends Controller
     }
 
     /**
-     * RESTORE ALBUM: Restore all items in an album from trash
-     */
-    public function restoreAlbum(Request $request)
-    {
-        $albumId = $request->album_id;
-        Photo::onlyTrashed()->where('album_id', $albumId)->restore();
-        
-        $album = Album::withTrashed()->find($albumId);
-        if ($album && $album->trashed()) { $album->restore(); }
-
-        return back()->with('status', 'Album items restored!')->with('last_tab', 'trash');
-    }
-
-    /**
-     * DESTROY: Soft delete
-     */
-    public function destroy(Photo $Photo)
-    {
-        $album = $Photo->album;
-        $Photo->delete();
-
-        if ($album && $album->slides()->count() === 0) {
-            $album->delete();
-        }
-
-        return back()->with('status', 'Moved to Recycle Bin.')->with('last_tab', 'manage');
-    }
-
-    /**
      * FORCE DELETE: Permanent removal
      */
     public function forceDelete($id)
@@ -141,21 +167,5 @@ class PhotosController extends Controller
 
         $slide->forceDelete();
         return back()->with('status', 'Permanently removed.');
-    }
-
-    /**
-     * SETTINGS: Update duration and effects
-     */
-    public function updateSettings(Request $request) 
-    {
-        $request->validate([
-            'slide_duration' => 'required|numeric|min:1',
-            'transition_effect' => 'required|string'
-        ]);
-
-        DB::table('settings')->updateOrInsert(['key' => 'slide_duration'], ['value' => $request->slide_duration]);
-        DB::table('settings')->updateOrInsert(['key' => 'transition_effect'], ['value' => $request->transition_effect]);
-        
-        return back()->with('status', 'Settings updated successfully!');
     }
 }
