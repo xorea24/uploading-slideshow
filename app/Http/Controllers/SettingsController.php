@@ -45,6 +45,7 @@ class SettingsController extends Controller
         );
     }
 
+    session(['last_tab' => 'settings']);
     return back()->with('success', 'Settings updated!');
     }
 }
