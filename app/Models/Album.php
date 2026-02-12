@@ -10,7 +10,7 @@ class Album extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name', 'description'];
+    protected $fillable = ['name', 'description', 'is_active'];
 
     /**
      * Get all slides/images in this album

@@ -52,11 +52,19 @@ public function upload(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000', // Dinagdagan ng rules
         ]);
 
-        $album->update(['name' => $request->name]);
+        // Pinagsama ang name at description sa update
+        $album->update([
+            'name' => $request->name,
+            'description' => $request->description,
+        ]);
 
-        return back()->with('status', 'Album renamed successfully!')->with('last_tab', 'manage');
+        
+        return back()
+            ->with('status', 'Album updated successfully!')
+            ->with('last_tab', 'manage');
     }
 
     /**

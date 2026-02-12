@@ -114,41 +114,39 @@
      <!-- SIDEBAR NAVIGATION                                           -->
      <!-- Responsive sidebar with navigation menu & logout button     -->
      <!-- ============================================================ -->
-     <aside class="w-64 bg-red-950 text-white fixed md:static inset-y-0 left-0 z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col shadow-2xl" 
+    <aside class="w-64 bg-blue-700 text-white fixed md:static inset-y-0 left-0 z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col shadow-2xl" 
        :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
     
-    <!-- Sidebar Header with Logo -->
     <div class="p-6">   
-       <img src="{{ asset('image/stc_logo2.png') }}" alt="Logo" class="w-20 h-20 mb-4 mx-auto md:mx-0">
-        <h1 class="text-2xl font-bold tracking-wider uppercase">Mayor's <span class="text-red-400">Office</span></h1>
-        <p class="text-[10px] text-red-300 tracking-[0.2em] mt-1">UPLOADING SYSTEM</p>
+        <img src="{{ asset('image/stc_logo4.png') }}" alt="Logo" class="w-20 h-20 mb-4 mx-auto md:mx-0">
+        <h1 class="text-2xl font-bold tracking-wider uppercase">Mayor's <span class="text-blue-200">Office</span></h1>
+        <p class="text-[10px] text-blue-100 tracking-[0.2em] mt-1">UPLOADING SYSTEM</p>
     </div>  
 
-    <!-- Navigation Menu -->
     <nav class="flex-1 px-4 space-y-2 mt-4">
         <a href="#" @click.prevent="tab = 'manage'; sidebarOpen = false" 
-            :class="tab === 'manage' ? 'bg-red-600 text-white shadow-lg' : 'text-red-200 hover:bg-red-900'"
+            :class="tab === 'manage' ? 'bg-white text-blue-700 shadow-lg' : 'text-blue-50 hover:bg-blue-600'"
             class="flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             Albums
-</a>
+    </a>
 
         <a href="#" @click.prevent="tab = 'trash'; sidebarOpen = false" 
-            :class="tab === 'trash' ? 'bg-red-600 text-white shadow-lg' : 'text-red-200 hover:bg-red-900'"
+            :class="tab === 'trash' ? 'bg-white text-blue-700 shadow-lg' : 'text-blue-50 hover:bg-blue-600'"
             class="flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
             Recycle Bin
-            <span class="ml-auto bg-white text-red-950 text-[10px] px-2 py-0.5 rounded-full font-bold">
+            <span class="ml-auto bg-blue-900 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
                 {{ \App\Models\Photo::onlyTrashed()->count() }}
             </span>
         </a>
 
         <a href="#" @click.prevent="tab = 'settings'; sidebarOpen = false" 
-            :class="tab === 'settings' ? 'bg-red-600 text-white shadow-lg' : 'text-red-200 hover:bg-red-900'"
+            :class="tab === 'settings' ? 'bg-white text-blue-700 shadow-lg' : 'text-blue-50 hover:bg-blue-600'"
             class="flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -158,11 +156,10 @@
         </a>
     </nav>
 
-    <!-- Logout Section -->
-    <div class="p-4 border-t border-red-900/50">
+    <div class="p-4 border-t border-blue-800/50">
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button class="w-full flex items-center gap-3 px-4 py-3 text-red-300 hover:bg-red-600 hover:text-white rounded-xl transition text-sm font-bold uppercase tracking-widest">
+            <button class="w-full flex items-center gap-3 px-4 py-3 text-blue-100 hover:bg-blue-800 hover:text-white rounded-xl transition text-sm font-bold uppercase tracking-widest">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
@@ -300,6 +297,7 @@
       <!-- ============================================================ -->
 <div x-show="tab === 'manage'" x-cloak x-transition>
     <div class="max-w-6xl mx-auto px-4 pb-20">
+        
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
             <div class="relative w-full md:w-80">
                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
@@ -309,9 +307,9 @@
             </div>
 
             <div class="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-100 shadow-sm">
-                <button @click="if(page > 1) page--" :disabled="page === 1" class="px-3 py-1.5 text-xs font-bold rounded-lg" :class="page === 1 ? 'text-gray-300' : 'text-gray-600 hover:bg-white'">Prev</button>
+                <button @click="if(page > 1) page--" :disabled="page === 1" class="px-3 py-1.5 text-xs font-bold rounded-lg transition" :class="page === 1 ? 'text-gray-300' : 'text-gray-600 hover:bg-white'">Prev</button>
                 <div class="px-3 py-1.5 text-xs font-bold text-red-900 border-x border-gray-200">Page <span x-text="page"></span> of <span x-text="totalPages"></span></div>
-                <button @click="if(page < totalPages) page++" :disabled="page === totalPages" class="px-3 py-1.5 text-xs font-bold rounded-lg" :class="page === totalPages ? 'text-gray-300' : 'text-red-600 hover:bg-white'">Next</button>
+                <button @click="if(page < totalPages) page++" :disabled="page === totalPages" class="px-3 py-1.5 text-xs font-bold rounded-lg transition" :class="page === totalPages ? 'text-gray-300' : 'text-red-600 hover:bg-white'">Next</button>
             </div>
         </div>
 
@@ -340,47 +338,25 @@
                     <div class="flex-1">
                         <div class="flex items-center gap-2">
                             <h3 class="text-xl font-black text-red-900 tracking-tight" x-text="localCategory"></h3>
-                            <button @click="let newName = prompt('Enter new album name:', localCategory); if(newName && newName !== localCategory) { $refs.editAlbumNameInput.value = newName; $refs.editAlbumForm.submit(); }" 
+                            <button @click="let newName = prompt('Enter new album name:', localCategory); if(newName && newName !== localCategory) { localCategory = newName; $nextTick(() => $refs.editAlbumForm.submit()); }" 
                                     class="p-1 text-gray-400 hover:text-blue-600 transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                             </button>
                         </div>
-
                         <div class="mt-1 flex items-center gap-2 group/albdesc">
-                            <template x-if="localDesc">
-                                <p class="text-sm text-gray-500 italic font-medium leading-relaxed" x-text="localDesc"></p>
-                            </template>
-                            <template x-if="!localDesc">
-                                <p class="text-sm text-gray-300 italic">No album description</p>
-                            </template>
-                            
-                            <button @click="let newDesc = prompt('Edit Album Subtitle:', localDesc); if(newDesc !== null) { $refs.editAlbumDescInput.value = newDesc; $refs.editAlbumForm.submit(); }" 
+                            <p class="text-sm text-gray-500 italic font-medium" x-text="localDesc || 'No album description'"></p>
+                            <button @click="let newDesc = prompt('Edit Album Subtitle:', localDesc); if(newDesc !== null) { localDesc = newDesc; $nextTick(() => $refs.editAlbumForm.submit()); }" 
                                     class="opacity-0 group-hover/albdesc:opacity-100 p-0.5 text-blue-400 hover:text-blue-600 transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                             </button>
                         </div>
-                        
-                        <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest">
-                            <span x-text="totalPhotos"></span> Photos
-                        </p>
                     </div>
 
-                    <form x-ref="editAlbumForm" action="{{ route('albums.update', $album->id) }}" method="POST" class="hidden">
-                        @csrf @method('PATCH')
-                        <input type="hidden" name="name" x-ref="editAlbumNameInput" :value="localCategory">
-                        <input type="hidden" name="description" x-ref="editAlbumDescInput" :value="localDesc">
-                    </form>
-                    
-                    <div class="flex items-center gap-2">
-                        <div class="relative hidden sm:block">
-                            <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-gray-400">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                            </span>
-                            <input type="text" x-model="PhotoSearch" @input="photoPage = 1" placeholder="Search Photos..." 
-                                   class="pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:ring-1 focus:ring-red-500 outline-none w-32 md:w-48 transition-all">
-                        </div>
-
-                        <button @click="tab = 'upload'; isNewAlbum = false; $nextTick(() => { document.getElementById('album_select').value = '{{ $album->id }}' })" 
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <input type="text" x-model="PhotoSearch" @input="photoPage = 1" placeholder="Search Photos..." 
+                               class="pl-3 pr-3 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:ring-1 focus:ring-red-500 outline-none w-32 md:w-40">
+                        
+                          <button @click="tab = 'upload'; isNewAlbum = false; $nextTick(() => { document.getElementById('album_select').value = '{{ $album->id }}' })" 
                                 class="p-1.5 text-blue-600 bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100 transition-colors" title="Upload Photos">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -388,69 +364,102 @@
                             </svg>
                         </button>
                         
-                        <form action="{{ route('albums.destroy', $album->id) }}" method="POST" onsubmit="return confirm('Move ENTIRE album to Recycle Bin?')">
+
+                        <form action="{{ route('albums.destroy', $album->id) }}" method="POST" onsubmit="return confirm('Delete entire album?')">
                             @csrf @method('DELETE')
                             <button type="submit" class="p-1.5 text-red-500 bg-red-50 border border-red-100 rounded-lg hover:bg-red-100">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"/></svg>
                             </button>
                         </form>
                     </div>
+
+                    <form action="{{ route('Photo.store') }}" method="POST" enctype="multipart/form-data" class="hidden">
+                        @csrf
+                        <input type="hidden" name="album_id" value="{{ $album->id }}">
+                        <input type="file" x-ref="photoUploadInput{{ $album->id }}" name="image" @change="$el.form.submit()" accept="image/*">
+                    </form>
+
+                    <form x-ref="editAlbumForm" action="{{ route('albums.update', $album->id) }}" method="POST" class="hidden">
+                        @csrf @method('PATCH')
+                        <input type="hidden" name="name" :value="localCategory">
+                        <input type="hidden" name="description" :value="localDesc">
+                    </form>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-                    @forelse($groupedSlides as $index => $slide)
-                        <div x-data="{ photoIdx: {{ $index + 1 }} }"
-                             x-show="(PhotoSearch === '' || '{{ addslashes($slide->name) }}'.toLowerCase().includes(PhotoSearch.toLowerCase()) || '{{ addslashes($slide->description) }}'.toLowerCase().includes(PhotoSearch.toLowerCase())) && (photoIdx > (photoPage - 1) * photosPerPage && photoIdx <= photoPage * photosPerPage)"
-                             x-transition
-                             class="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm group hover:border-red-200 transition">
-                            
-                            <div class="relative">
-                                <img src="{{ asset('storage/' . $slide->image_path) }}" class="w-full h-32 object-cover group-hover:opacity-80 transition duration-300" alt="{{ $slide->name }}">
-                                <div class="absolute top-2 right-2">
-                                    <span class="px-2 py-0.5 rounded-md text-[8px] font-bold uppercase {{ $slide->is_active ? 'bg-green-500/80 text-white' : 'bg-gray-500/80 text-white' }}">
-                                        {{ $slide->is_active ? 'Visible' : 'Hidden' }}
-                                    </span>
-                                </div>
+              @forelse($groupedSlides as $index => $slide)
+                <div x-data="{ 
+                        photoIdx: {{ $index + 1 }},
+                        currentTitle: '{{ addslashes($slide->name) }}',
+                        currentDesc: '{{ addslashes($slide->description) }}',
+                        
+                        updatePhoto() {
+                            // Pinipilit nating i-sync ang value sa hidden inputs bago i-submit
+                            $nextTick(() => {
+                                $refs['photoForm{{ $slide->id }}'].submit();
+                            });
+                        }
+                    }"
+                    x-show="(PhotoSearch === '' || currentTitle.toLowerCase().includes(PhotoSearch.toLowerCase()) || currentDesc.toLowerCase().includes(PhotoSearch.toLowerCase())) && (photoIdx > (photoPage - 1) * photosPerPage && photoIdx <= photoPage * photosPerPage)"
+                    x-transition
+                    class="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm group hover:border-blue-200 transition">
+                    
+                    <div class="relative">
+                        <img src="{{ asset('storage/' . $slide->image_path) }}" class="w-full h-32 object-cover">
+                        <div class="absolute top-2 right-2">
+                            <span class="px-2 py-0.5 rounded-md text-[8px] font-bold uppercase {{ $slide->is_active ? 'bg-green-500/80 text-white' : 'bg-gray-500/80 text-white' }}">
+                                {{ $slide->is_active ? 'Visible' : 'Hidden' }}
+                            </span>
+                        </div>
+                    </div>
+<!-- Image Title and imnage deescription-->
+                    <div class="p-3">
+                        <div class="mb-3 space-y-1">
+                            <div class="flex items-center justify-between group/title">
+                                <h4 class="text-xs font-bold text-gray-800 truncate flex-1" x-text="currentTitle || 'Untitled'"></h4>
+                                <button @click="let nt = prompt('Edit Image Title:', currentTitle); if(nt !== null && nt.trim() !== '') { currentTitle = nt; updatePhoto(); }" 
+                                        class="opacity-0 group-hover/title:opacity-100 p-0.5 text-blue-500 hover:text-blue-700 transition">
+                                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-width="2"/></svg>
+                                </button>
                             </div>
 
-                            <div class="p-3">
-                                <div class="mb-3 space-y-1">
-                                    <div class="flex items-center justify-between group/title">
-                                        <h4 class="text-xs font-bold text-gray-800 truncate flex-1" title="{{ $slide->name }}">{{ $slide->name ?? 'Untitled Photo' }}</h4>
-                                        <button @click="let newTitle = prompt('Edit Title:', '{{ addslashes($slide->name) }}'); if(newTitle) { $refs['editTitleInput_' + {{ $slide->id }}].value = newTitle; $refs['editPhotoForm_' + {{ $slide->id }}].submit(); }" class="opacity-0 group-hover/title:opacity-100 p-0.5 text-blue-500 transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
-                                    </div>
-
-                                    <div class="flex items-start justify-between group/desc">
-                                        <div class="flex-1">
-                                            @if($slide->description)
-                                                <p class="text-[10px] text-gray-500 line-clamp-2 mt-0.5">{{ $slide->description }}</p>
-                                            @else
-                                                <p class="text-[10px] text-gray-400 italic mt-0.5">No description</p>
-                                            @endif
-                                        </div>
-                                        <button @click="let newDesc = prompt('Edit Description:', '{{ addslashes($slide->description) }}'); if(newDesc !== null) { $refs['editDescInput_' + {{ $slide->id }}].value = newDesc; $refs['editPhotoForm_' + {{ $slide->id }}].submit(); }" class="opacity-0 group-hover/desc:opacity-100 p-0.5 text-blue-500 transition ml-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
-                                    </div>
-
-                                    <form :x-ref="'editPhotoForm_' + {{ $slide->id }}" action="{{ route('Photo.update', $slide->id) }}" method="POST" class="hidden">
-                                        @csrf @method('PATCH')
-                                        <input type="hidden" name="name" :x-ref="'editTitleInput_' + {{ $slide->id }}" value="{{ $slide->name }}">
-                                        <input type="hidden" name="description" :x-ref="'editDescInput_' + {{ $slide->id }}" value="{{ $slide->description }}">
-                                    </form>
+                            <div class="flex items-start justify-between group/desc">
+                                <div class="flex-1">
+                                    <p class="text-[10px] text-gray-500 line-clamp-2 mt-0.5" x-text="currentDesc || 'No description'"></p>
                                 </div>
-
-                                <div class="flex gap-2">
-                                    <form action="{{ route('Photo.toggle', $slide->id) }}" method="POST" class="flex-1">@csrf @method('PATCH')
-                                        <button class="w-full py-1.5 {{ $slide->is_active ? 'bg-yellow-600' : 'bg-green-600' }} text-white text-[10px] font-bold rounded-lg transition">{{ $slide->is_active ? 'HIDE' : 'SHOW' }}</button>
-                                    </form>
-                                    <form action="{{ route('Photo.destroy', $slide->id) }}" method="POST" onsubmit="return confirm('Delete this photo?')">@csrf @method('DELETE')
-                                        <button type="submit" class="p-1.5 text-red-500 hover:bg-red-50 border border-red-100 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
-                                    </form>
-                                </div>
+                                <button @click="let nd = prompt('Edit Image Description:', currentDesc); if(nd !== null) { currentDesc = nd; updatePhoto(); }" 
+                                        class="opacity-0 group-hover/desc:opacity-100 p-0.5 text-blue-500 ml-1 hover:text-blue-700 transition">
+                                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-width="2"/></svg>
+                                </button>
                             </div>
                         </div>
-                    @empty
-                        <div class="col-span-full text-center py-4 text-gray-400 italic text-sm">No Photos in this album.</div>
-                    @endforelse
+
+                        <form x-ref="photoForm{{ $slide->id }}" action="{{ route('Photo.update', $slide->id) }}" method="POST" class="hidden">
+                            @csrf 
+                            @method('PATCH')
+                            <input type="hidden" name="name" :value="currentTitle">
+                            <input type="hidden" name="description" :value="currentDesc">
+                        </form>
+
+                        <div class="flex gap-2">
+                            <form action="{{ route('Photo.toggle', $slide->id) }}" method="POST" class="flex-1">
+                                @csrf @method('PATCH')
+                                <button class="w-full py-1.5 {{ $slide->is_active ? 'bg-yellow-600' : 'bg-green-600' }} text-white text-[10px] font-bold rounded-lg hover:opacity-90 transition">
+                                    {{ $slide->is_active ? 'HIDE' : 'SHOW' }}
+                                </button>
+                            </form>
+                            <form action="{{ route('Photo.destroy', $slide->id) }}" method="POST" onsubmit="return confirm('Delete photo?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="p-1.5 text-red-500 hover:bg-red-50 border border-red-100 rounded-lg transition">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"/></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="col-span-full text-center py-10 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 italic text-sm">No Photos in this album.</div>
+            @endforelse
                 </div>
 
                 <div class="flex justify-center mt-8 pt-6 border-t border-gray-50" x-show="totalPhotoPages > 1">
@@ -462,8 +471,9 @@
                 </div>
             </div>
         @empty
-            <div class="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
-                <p class="text-gray-400">No albums found.</p>
+            <div class="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200 shadow-sm">
+                <svg class="mx-auto h-12 w-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <p class="text-gray-400 font-medium">No albums found.</p>
             </div>
         @endforelse
     </div>
