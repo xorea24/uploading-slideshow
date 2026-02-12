@@ -18,6 +18,8 @@ use App\Http\Controllers\AuthController;
 |--------------------------------------------------------------------------
 */
 // This is for the Slideshow frontend to check for changes
+// The name 'Photo.update' must match your route() helper in Blade
+Route::patch('/photos/{photo}', [PhotosController::class, 'update'])->name('Photo.update');
 
 Route::patch('/photos/{photo}', [PhotosController::class, 'updatePhoto'])->name('Photo.update');
 
@@ -66,23 +68,22 @@ Route::prefix('Photo')->middleware('auth')->group(function () {
 
 /**
  * SETTINGS & API
- * 
- * 
+ *
+ *
  */
 
-// To this:
-    Route::patch('/settings', [SettingController::class, 'update'])->name('settings.update');
-    Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update')->middleware('auth');
+Route::patch('/settings', [SettingsController::class, 'update'])->name('settings.update');
+Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update')->middleware('auth');
 
-    Route::get('/api/get-latest-settings', function () {
-        $lastSetting = DB::table('settings')->max('updated_at');
-        $lastImage = DB::table('photos')->max('updated_at');
-        $lastAlbum = DB::table('albums')->max('updated_at'); // Isama ang album updates
+Route::get('/api/get-latest-settings', function () {
+    $lastSetting = DB::table('settings')->max('updated_at');
+    $lastImage = DB::table('photos')->max('updated_at');
+    $lastAlbum = DB::table('albums')->max('updated_at'); // Isama ang album updates
 
-        return response()->json([
-            'last_update' => max($lastSetting, $lastImage, $lastAlbum)
-        ]);
-    });
+    return response()->json([
+        'last_update' => max($lastSetting, $lastImage, $lastAlbum)
+    ]);
+});
 
 
 /**

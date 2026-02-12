@@ -24,7 +24,8 @@
     // 3. MASTER TIMESTAMP (Para sa Auto-Reload)
     $lastSettingUpdate = \DB::table('settings')->max('updated_at');
     $lastImageUpdate = \DB::table('photos')->max('updated_at');
-    $masterTimestamp = max($lastSettingUpdate, $lastImageUpdate);
+    $lastAlbumUpdate = \DB::table('albums')->max('updated_at');
+    $masterTimestamp = max($lastSettingUpdate, $lastImageUpdate, $lastAlbumUpdate);
 @endphp
 
 <!DOCTYPE html>
@@ -84,8 +85,7 @@
         <h2 class="text-white text-xl font-light tracking-[0.2em] uppercase animate-pulse">
             Updating Album...
         </h2>
-    </div>
-
+    </div>    b
     <div class="swiper mySwiper">
         <div class="swiper-wrapper">
         @forelse($slides as $slide)

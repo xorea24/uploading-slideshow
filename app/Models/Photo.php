@@ -17,9 +17,9 @@ class Photo extends Model
 
     protected $table = 'photos'; // Match the migration table name
 
-    protected $fillable = ['album_id', 'image_path', 'name', 'description', 'is_active'];
+    protected $fillable = ['album_id', 'image_path', 'name', 'description', 'is_active','image_title', 'image_description'];
     public function album()
-   {
+{
        return $this->belongsTo(Album::class);
    }
 
