@@ -4,23 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; // 1. Import SoftDeletes trait
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Photo extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes; // Pagsamahin na natin dito para malinis
 
-    /**
-     * Ang mga attributes na ito ay pwedeng lagyan ng data nang sabay-sabay (Mass Assignment).
-     */
-    use SoftDeletes; // 2. Add this inside the class
+    protected $table = 'photos';
 
-    protected $table = 'photos'; // Match the migration table name
+   // app/Models/Photo.php
 
-    protected $fillable = ['album_id', 'image_path', 'name', 'description', 'is_active','image_title', 'image_description'];
+      // App/Models/Photo.php o Slide.php
+protected $fillable = ['name', 'description', 'album_id', 'image_path', 'is_active'];
+
     public function album()
-{
-       return $this->belongsTo(Album::class);
-   }
-
+    {
+        return $this->belongsTo(Album::class);
+    }
 }

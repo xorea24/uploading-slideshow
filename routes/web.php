@@ -19,9 +19,9 @@ use App\Http\Controllers\AuthController;
 */
 // This is for the Slideshow frontend to check for changes
 // The name 'Photo.update' must match your route() helper in Blade
-Route::patch('/photos/{photo}', [PhotosController::class, 'update'])->name('Photo.update');
 
-Route::patch('/photos/{photo}', [PhotosController::class, 'updatePhoto'])->name('Photo.update');
+// web.php
+Route::patch('/photos/{id}', [PhotosController::class, 'update'])->name('Photo.update');
 
 Route::get('/settings/latest', [SettingsController::class, 'getLatestData']);
 

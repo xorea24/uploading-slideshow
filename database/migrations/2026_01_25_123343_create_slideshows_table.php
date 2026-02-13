@@ -16,7 +16,8 @@ return new class extends Migration
         Schema::create('photos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('album_id')->constrained('albums')->onDelete('cascade');
-            $table->string('category_name');
+            $table->string('image_path')->unique();
+            $table->string('name');
             $table->text('description')->nullable();
             $table->string('image_path');
             $table->boolean('is_active')->default(true);
