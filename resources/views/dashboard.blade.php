@@ -9,14 +9,16 @@
     <!-- Meta Tags & Title -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Mayor's Office</title>
+    <head>
+    <title img src="{{ asset('image/stc_logo5.png') }}"> Mayor's Office</title>
+</head>
     
     <!-- Tailwind CSS Framework -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Alpine.js for Reactive Components -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
+
     <!-- Custom Styles -->
     <style>
         [x-cloak] { display: none !important; }
@@ -37,7 +39,7 @@
         sidebarOpen: false,
         search: '',
         page: 1,
-        perPage: 10,
+        perPage: 1,
         isNewAlbum: false,
 
         // --- NEW DATA FOR MULTI-UPLOAD ---
@@ -405,10 +407,13 @@
                     localDesc: '{{ addslashes($album->description) }}',
                     PhotoSearch: '',
                     photoPage: 1,
-                    photosPerPage: 8,
+                    photosPerPage: 4,
                     isUpdating: false,
-                    get totalPhotos() { return {{ $groupedSlides->count() }} },
-                    get totalPhotoPages() { return Math.ceil(this.totalPhotos / this.photosPerPage) }
+                    // Count slides directly from Blade, or you can make this dynamic if deleting via JS
+                    totalPhotos: {{ $groupedSlides->count() }},
+                    get totalPhotoPages() { 
+                        return Math.ceil(this.totalPhotos / this.photosPerPage) 
+                    }
                  }"
                  x-show="(search === '' || localCategory.toLowerCase().includes(search.toLowerCase())) && (myIndex > (page - 1) * perPage && myIndex <= page * perPage)"
                  x-transition:enter="transition ease-out duration-300">
@@ -439,7 +444,7 @@
                             <svg class="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="3"/></svg>
                         </div>
                         
-                       <button @click="tab = 'upload'; isNewAlbum = false; $nextTick(() => { document.getElementById('album_select').value = '{{ $album->id }}' })" 
+                        <button @click="tab = 'upload'; isNewAlbum = false; $nextTick(() => { document.getElementById('album_select').value = '{{ $album->id }}' })" 
                                 class="flex items-center gap-2 px-3 py-2 bg-transparent text-blue-600 hover:bg-blue-50 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -460,109 +465,84 @@
                         <input type="hidden" name="description" :value="localDesc">
                     </form>
                 </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        @forelse($groupedSlides as $index => $slide)
+                            <div x-data="{ 
+                                    photoId: {{ $slide->id }},
+                                    photoIdx: {{ $index + 1 }},
+                                    currentTitle: '{{ addslashes($slide->name) }}',
+                                    currentDesc: '{{ addslashes($slide->description) }}',
+                                    localActive: {{ $slide->is_active ? 'true' : 'false' }},
+                                    isSavingPhoto: false,
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    @forelse($groupedSlides as $index => $slide)
-                        <div x-data="{ 
-                                photoId: {{ $slide->id }},
-                                photoIdx: {{ $index + 1 }},
-                                currentTitle: '{{ addslashes($slide->name) }}',
-                                currentDesc: '{{ addslashes($slide->description) }}',
-                                isSavingPhoto: false,
-                                
-                                async updateData(field) {
-                                    let oldValue = field === 'title' ? this.currentTitle : this.currentDesc;
-                                    let promptMsg = field === 'title' ? 'New Photo Title:' : 'New Description:';
-                                    let newValue = prompt(promptMsg, oldValue);
-                                    
-                                    if (newValue === null || newValue === oldValue) return;
+                                    async toggleStatus() {
+                                        this.isSavingPhoto = true;
+                                        try {
+                                            const response = await fetch(`/photos/${this.photoId}/toggle`, {
+                                                method: 'PATCH',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'Accept': 'application/json',
+                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                                }
+                                            });
 
-                                    this.isSavingPhoto = true;
-
-                                    try {
-                                        const response = await fetch(`/photos/${this.photoId}`, {
-                                            method: 'PATCH',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                            },
-                                            body: JSON.stringify({
-                                                name: field === 'title' ? newValue : this.currentTitle,
-                                                description: field === 'desc' ? newValue : this.currentDesc
-                                            })
-                                        });
-
-                                        if (response.ok) {
-                                            if(field === 'title') this.currentTitle = newValue;
-                                            if(field === 'desc') this.currentDesc = newValue;
-                                        } else {
-                                            alert('Failed to save to database.');
+                                            if (response.ok) {
+                                                const data = await response.json();
+                                                this.localActive = data.is_active;
+                                            } else {
+                                                alert('Failed to update status.');
+                                            }
+                                        } catch (error) {
+                                            console.error('Error:', error);
+                                        } finally {
+                                            this.isSavingPhoto = false;
                                         }
-                                    } catch (error) {
-                                        console.error('Error:', error);
-                                    } finally {
-                                        this.isSavingPhoto = false;
                                     }
-                                }
-                            }"
-                            x-show="(PhotoSearch === '' || currentTitle.toLowerCase().includes(PhotoSearch.toLowerCase()) || currentDesc.toLowerCase().includes(PhotoSearch.toLowerCase())) && (photoIdx > (photoPage - 1) * photosPerPage && photoIdx <= photoPage * photosPerPage)"
-                            x-transition
-                            class="relative bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm group hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500">
-                            
-                            <div x-show="isSavingPhoto" class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-50 flex items-center justify-center">
-                                <div class="flex flex-col items-center gap-2">
+                                }"
+                                x-show="(PhotoSearch === '' || currentTitle.toLowerCase().includes(PhotoSearch.toLowerCase())) && (photoIdx > (photoPage - 1) * photosPerPage && photoIdx <= photoPage * photosPerPage)"
+                                class="relative bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm group">
+                                
+                                <div x-show="isSavingPhoto" class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-50 flex items-center justify-center">
                                     <div class="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
-                                    <span class="text-[8px] font-black text-blue-600 uppercase tracking-widest">Saving...</span>
                                 </div>
-                            </div>
 
-                            <div class="relative h-48 bg-slate-100">
-                                <img src="{{ asset('storage/' . $slide->image_path) }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                                <div class="absolute top-4 right-4">
-                                    <span class="px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest shadow-2xl backdrop-blur-md {{ $slide->is_active ? 'bg-emerald-500 text-white' : 'bg-slate-700 text-white' }}">
-                                        {{ $slide->is_active ? 'Public' : 'Hidden' }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="p-5 space-y-4">
-                                <div class="flex items-center justify-between group/title">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <div class="h-2 w-2 rounded-full bg-blue-500"></div>
-                                        <h4 class="text-xs font-black text-slate-800 truncate uppercase tracking-tight" x-text="currentTitle || 'UNTITLED'"></h4>
+                                <div class="relative h-48 bg-slate-100">
+                                    <img src="{{ asset('storage/' . $slide->image_path) }}" 
+                                        class="w-full h-full object-cover transition-all"
+                                        :class="!localActive ? 'grayscale opacity-50' : ''">
+                                    
+                                    <div class="absolute top-4 right-4">
+                                        <span class="px-3 py-1.5 rounded-xl text-[8px] font-black uppercase"
+                                            :class="localActive ? 'bg-emerald-500 text-white' : 'bg-slate-700 text-white'"
+                                            x-text="localActive ? 'Public' : 'Hidden'">
+                                        </span>
                                     </div>
-                                    <button @click="updateData('title')" class="opacity-0 group-hover/title:opacity-100 p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-all">
-                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-width="2.5"/></svg>
-                                    </button>
                                 </div>
 
-                                <div class="bg-slate-50 p-3 rounded-2xl relative">
-                                    <p class="text-[10px] text-slate-500 line-clamp-2 leading-relaxed italic pr-4" x-text="currentDesc || 'No description added...'"></p>
-                                    <button @click="updateData('desc')" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 text-blue-400 hover:text-blue-600 transition-all">
-                                        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2.5"/></svg>
-                                    </button>
-                                </div>
+                                <div class="p-5 space-y-4">
+                                    <h4 class="text-xs font-black truncate" x-text="currentTitle || 'UNTITLED'"></h4>
+                                    
+                                    <div class="flex gap-2">
+                                        <button @click="toggleStatus()" 
+                                                class="flex-1 py-1.5 border text-[10px] font-bold rounded-lg transition"
+                                                :class="localActive ? 'bg-white border-gray-200 text-gray-600' : 'bg-blue-600 border-blue-600 text-white'">
+                                            <span x-text="localActive ? 'HIDE' : 'SHOW'"></span>
+                                        </button>
 
-                                <div class="flex gap-2 pt-2">
-                                    <form action="{{ route('Photo.toggle', $slide->id) }}" method="POST" class="flex-1">
-                                        @csrf @method('PATCH')
-                                        <button type="submit" class="w-full py-2.5 rounded-xl text-[9px] font-black tracking-widest transition-all border-2 {{ $slide->is_active ? 'bg-slate-800 text-white border-slate-800 hover:bg-slate-900' : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100' }}">
-                                            {{ $slide->is_active ? 'HIDE' : 'ACTIVATE' }}
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('Photo.destroy', $slide->id) }}" method="POST" onsubmit="return confirm('Delete this photo?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-100">
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"/></svg>
-                                        </button>
-                                    </form>
+                                        <form action="{{ route('photos.destroy', $slide->id) }}" method="POST" onsubmit="return confirm('Delete?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="p-2.5 text-slate-400 hover:text-red-600 rounded-xl border border-transparent hover:border-red-100">
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2"/></svg>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>  
-                    @empty
-                        <div class="col-span-full text-center py-20 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 text-slate-400 font-bold italic text-sm">Empty Album.</div>
-                    @endforelse
-                </div>
+                            </div>  
+                        @empty
+                            <div class="col-span-full text-center py-10 text-gray-400">Empty Album.</div>
+                        @endforelse
+                    </div>
 
                 <div class="flex justify-center mt-12" x-show="totalPhotoPages > 1">
                     <div class="flex items-center gap-1 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-lg shadow-blue-500/5">
@@ -730,7 +710,13 @@
             let rawSavedValue = '{{ $settings['display_album_ids'] ?? '' }}';
             let savedIds = rawSavedValue ? rawSavedValue.split(',').map(id => id.trim()) : [];
             this.activeAlbums = this.allAlbums.filter(a => savedIds.includes(a.id.toString()));
-            this.updateHiddenInput();
+            
+            // Auto-sync the hidden input whenever activeAlbums changes
+            this.$watch('activeAlbums', () => {
+                this.displayAlbumIds = this.activeAlbums.map(a => a.id).join(',');
+            });
+            // Run once on load
+            this.displayAlbumIds = this.activeAlbums.map(a => a.id).join(',');
         },
 
         toggleAlbum(album) {
@@ -740,18 +726,12 @@
             } else {
                 this.activeAlbums.splice(index, 1);
             }
-            this.updateHiddenInput();
-        },
-
-        updateHiddenInput() {
-            this.displayAlbumIds = this.activeAlbums.map(a => a.id).join(',');
         },
 
         isSelected(id) {
             return this.activeAlbums.some(a => a.id === id);
         }
-    }"
-    x-init="init()">
+    }">
 
     <div class="max-w-5xl mx-auto">
         <div class="mb-6">
@@ -780,11 +760,13 @@
                         <label class="text-sm font-black text-gray-700 uppercase tracking-widest">Slide Duration</label>
                     </div>
                     <div class="relative group">
-                        <input type="number" name="slide_duration" value="{{ $currentDuration }}" min="1" max="60"
-                               class="w-full pl-5 pr-12 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 outline-none transition-all text-lg font-bold text-gray-800">
-                        <span class="absolute right-5 top-4.5 text-gray-400 font-bold uppercase text-[10px] tracking-widest">sec</span>
+                        <div class="relative">
+                            <input type="number" name="slide_duration" value="{{ $currentDuration }}" min="1" max="60"
+                                class="w-full pl-5 pr-14 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 outline-none transition-all text-lg font-bold text-gray-800">
+                            <span class="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold uppercase text-[10px] tracking-widest pointer-events-none">sec</span>
+                        </div>
+                        <p class="text-[10px] text-gray-400 italic px-1 mt-1">How many seconds each slide stays on screen.</p>
                     </div>
-                    <p class="text-[10px] text-gray-400 italic px-1">How many seconds each slide stays on screen.</p>
                 </div>
 
                 <div class="space-y-3">
@@ -797,13 +779,18 @@
                         </div>
                         <label class="text-sm font-black text-gray-700 uppercase tracking-widest">Transition Effect</label>
                     </div>
-                    <select name="transition_effect" class="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 outline-none bg-white transition-all font-bold text-gray-700 cursor-pointer appearance-none">
-                        <option value="fade" {{ $currentEffect == 'fade' ? 'selected' : '' }}>Smooth Fade</option>
-                        <option value="slide-up" {{ $currentEffect == 'slide-up' ? 'selected' : '' }}>Slide Upward</option>
-                        <option value="slide-down" {{ $currentEffect == 'slide-down' ? 'selected' : '' }}>Slide Downward</option>
-                        <option value="slide-left" {{ $currentEffect == 'slide-left' ? 'selected' : '' }}>Slide Leftward</option>
-                        <option value="slide-right" {{ $currentEffect == 'slide-right' ? 'selected' : '' }}>Slide Rightward</option>
-                    </select>
+                    <div class="relative">
+                        <select name="transition_effect" class="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 outline-none bg-white transition-all font-bold text-gray-700 cursor-pointer appearance-none">
+                            <option value="fade" {{ $currentEffect == 'fade' ? 'selected' : '' }}>Smooth Fade</option>
+                            <option value="slide-up" {{ $currentEffect == 'slide-up' ? 'selected' : '' }}>Slide Upward</option>
+                            <option value="slide-down" {{ $currentEffect == 'slide-down' ? 'selected' : '' }}>Slide Downward</option>
+                            <option value="slide-left" {{ $currentEffect == 'slide-left' ? 'selected' : '' }}>Slide Leftward</option>
+                            <option value="slide-right" {{ $currentEffect == 'slide-right' ? 'selected' : '' }}>Slide Rightward</option>
+                        </select>
+                        <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -826,15 +813,15 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="space-y-3">
-                        <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center justify-between">
                             Available Library 
                             <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full" x-text="allAlbums.length"></span>
                         </h4>
-                        <div class="bg-gray-50/50 rounded-2xl p-3 border border-gray-100 h-[300px] overflow-y-auto space-y-2">
+                        <div class="bg-gray-50/50 rounded-2xl p-3 border border-gray-100 h-[350px] overflow-y-auto space-y-2">
                             <template x-for="album in allAlbums.filter(a => a.name.toLowerCase().includes(albumSearch.toLowerCase()))" :key="album.id">
                                 <div @click="toggleAlbum(album)" 
-                                     class="group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all border"
-                                     :class="isSelected(album.id) ? 'bg-white border-blue-500 shadow-md scale-[1.02]' : 'bg-white border-transparent hover:border-gray-300 shadow-sm'">
+                                     class="group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all border bg-white"
+                                     :class="isSelected(album.id) ? 'border-blue-500 ring-1 ring-blue-500 shadow-sm' : 'border-transparent hover:border-gray-300 shadow-sm'">
                                     
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
@@ -843,10 +830,13 @@
                                                 <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
                                             </svg>
                                         </div>
-                                        <span class="text-sm font-bold transition-colors" :class="isSelected(album.id) ? 'text-blue-800' : 'text-gray-600'" x-text="album.name"></span>
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-bold" :class="isSelected(album.id) ? 'text-blue-800' : 'text-gray-600'" x-text="album.name"></span>
+                                            <span x-show="isSelected(album.id)" class="text-[9px] text-blue-500 font-black uppercase tracking-tighter">In Queue</span>
+                                        </div>
                                     </div>
                                     
-                                    <div class="transition-transform duration-300" :class="isSelected(album.id) ? 'rotate-90' : ''">
+                                    <div class="transition-transform duration-300" :class="isSelected(album.id) ? 'rotate-180' : ''">
                                         <svg class="w-4 h-4" :class="isSelected(album.id) ? 'text-blue-600' : 'text-gray-300'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path d="M9 5l7 7-7 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
                                         </svg>
@@ -857,18 +847,18 @@
                     </div>
 
                     <div class="space-y-3">
-                        <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] flex items-center justify-between">
                             Slideshow Queue
                             <span class="bg-blue-600 text-white px-2 py-0.5 rounded-full" x-text="activeAlbums.length"></span>
                         </h4>
-                        <div class="bg-blue-50/30 rounded-2xl p-3 border-2 border-dashed border-blue-100 h-[300px] overflow-y-auto space-y-2">
-                            <template x-for="album in activeAlbums" :key="album.id">
-                                <div @click="toggleAlbum(album)" class="flex items-center justify-between p-3 bg-white border border-blue-100 rounded-xl cursor-pointer hover:border-blue-600 transition-all shadow-sm group">
+                        <div class="bg-blue-50/30 rounded-2xl p-3 border-2 border-dashed border-blue-100 h-[350px] overflow-y-auto space-y-2">
+                            <template x-for="(album, index) in activeAlbums" :key="album.id">
+                                <div class="flex items-center justify-between p-3 bg-white border border-blue-100 rounded-xl shadow-sm group">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
+                                        <span class="text-[10px] font-black text-blue-300 w-4" x-text="index + 1"></span>
                                         <span class="text-sm font-bold text-gray-800" x-text="album.name"></span>
                                     </div>
-                                    <button type="button" class="p-1 rounded-md group-hover:bg-blue-50 text-blue-300 group-hover:text-blue-600 transition-colors">
+                                    <button @click="toggleAlbum(album)" type="button" class="p-1 rounded-md hover:bg-red-50 text-gray-300 hover:text-red-500 transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                                         </svg>
@@ -911,6 +901,34 @@
         </form>
     </div>
 </div>
+<script>
+    $('.photo-status-button').on('click', function() {
+        var button = $(this);
+        var photoId = button.data('photo-id');
+        var isActive = button.data('is-active');
+        
+        $.ajax({
+            url: '/photos/' + photoId + '/toggle',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    button.data('is-active', !isActive);
+                    button.toggleClass('bg-slate-800 text-white border-slate-800 hover:bg-slate-900', isActive);
+                    button.toggleClass('bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100', !isActive);
+                    button.text(isActive ? 'ACTIVATE' : 'HIDE');
+                } else {
+                    alert('Failed to update photo status.');
+                }
+            },
+            error: function() {
+                alert('An error occurred while updating photo status.');
+            }
+        });
+    });
+</script>
 </body>
 </html>
 

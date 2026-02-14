@@ -12,7 +12,12 @@
     // 2. FETCH SLIDES CONNECTED TO SELECTED ALBUMS
     $slidesQuery = \DB::table('photos')
         ->join('albums', 'photos.album_id', '=', 'albums.id')
-        ->select('photos.*', 'albums.name as album_title', 'albums.description as album_desc');
+        ->select('photos.*', 'albums.name as album_title', 'albums.description as album_desc')
+        /* CONNECTION POINT:
+           This line ensures that any photo you "Hide" in the manager 
+           (setting is_active to 0) will NOT appear here.
+        */
+        ->where('photos.is_active', 1); 
 
     // Filter by albums selected in settings
     if (!empty($albumIdArray)) {
@@ -22,10 +27,14 @@
     $slides = $slidesQuery->orderBy('photos.created_at', 'desc')->get();
 
     // 3. MASTER TIMESTAMP (Para sa Auto-Reload)
+    // We check the latest update in photos. If you hide/show a photo, 
+    // the updated_at changes, triggering a reload on the public screen.
     $lastSettingUpdate = \DB::table('settings')->max('updated_at');
     $lastImageUpdate = \DB::table('photos')->max('updated_at');
     $lastAlbumUpdate = \DB::table('albums')->max('updated_at');
-    $masterTimestamp = max($lastSettingUpdate, $lastImageUpdate, $lastAlbumUpdate);
+    
+    // Fallback to current time if null to prevent errors
+    $masterTimestamp = max($lastSettingUpdate, $lastImageUpdate, $lastAlbumUpdate) ?? now();
 @endphp
 
 <!DOCTYPE html>
@@ -43,7 +52,6 @@
     .swiper { width: 100%; height: 100vh; }
     .swiper-slide img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* SIMPLE TOP OVERLAY */
     .title-overlay {
         position: absolute;
         top: 30px;
@@ -56,14 +64,15 @@
     .title-card {
         padding: 15px 20px;
         color: white;
+        text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
     }
 
-    /* SIMPLE LOADING OVERLAY */
     #loading-overlay {
         position: fixed;
         inset: 0;
         z-index: 9999;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         background: black;
@@ -83,9 +92,10 @@
             <div class="absolute inset-0 border-4 border-red-600 rounded-full border-t-transparent animate-spin"></div>
         </div>
         <h2 class="text-white text-xl font-light tracking-[0.2em] uppercase animate-pulse">
-            Updating Album...
+            Updating Gallery Content...
         </h2>
-    </div>    b
+    </div>
+
     <div class="swiper mySwiper">
         <div class="swiper-wrapper">
         @forelse($slides as $slide)
@@ -104,7 +114,7 @@
                         @endif
                         <div class="mt-3 flex items-center gap-3">
                             <span class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded">OFFICIAL</span>
-                            <span class="text-gray-400 text-xs uppercase tracking-widest">
+                            <span class="text-gray-300 text-xs uppercase tracking-widest">
                                 {{ date('M Y') }}
                             </span>
                         </div>
@@ -114,8 +124,8 @@
         @empty
             <div class="swiper-slide flex items-center justify-center bg-gray-900 text-white text-center">
                 <div>
-                    <p class="text-2xl font-bold mb-2">No Albums Selected</p>
-                    <p class="text-gray-400">Go to Settings to select which albums to display.</p>
+                    <p class="text-2xl font-bold mb-2 uppercase tracking-widest text-red-500">No Active Photos</p>
+                    <p class="text-gray-400 font-medium italic">Photos hidden in the dashboard will not appear here.</p>
                 </div>
             </div>
         @endforelse
@@ -126,19 +136,21 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
     <script>
-    // 1. DATA REFRESH LOGIC (Auto-reloads when settings change)
+    // 1. DATA REFRESH LOGIC
     let currentUpdateTimestamp = "{{ $masterTimestamp }}";
 
     async function fetchLatestData() {
         try {
+            // Checks the API to see if photos were updated/hidden
             const response = await fetch('/api/get-latest-settings?t=' + Date.now()); 
             const data = await response.json();
 
+            // If a photo was hidden, the timestamp will be newer, triggering the reload
             if (data.last_update && data.last_update > currentUpdateTimestamp) {
                 showLoadingAndReload();
             }
         } catch (e) {
-            console.log("Check update failed, retrying later...");
+            console.log("Sync failed, retrying...");
         }
     }
 
@@ -146,10 +158,11 @@
         const overlay = document.getElementById('loading-overlay');
         overlay.classList.remove('hidden-overlay');
         overlay.classList.add('visible-overlay');
-        setTimeout(() => { window.location.reload(); }, 2000);
+        // Refresh to apply the changes (remove the hidden photos)
+        setTimeout(() => { window.location.reload(); }, 1500);
     }
 
-    // Check every 10 seconds for database changes
+    // Check for updates every 10 seconds
     setInterval(fetchLatestData, 10000);
 
     // 2. SWIPER INITIALIZATION
@@ -166,7 +179,7 @@
         pagination: { el: ".swiper-pagination", clickable: true },
     };
 
-    // Apply Effects based on Settings
+    // Transition Effect Logic
     if (effectSetting === 'fade') {
         swiperOptions.effect = 'fade';
         swiperOptions.fadeEffect = { crossFade: true };

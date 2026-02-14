@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+
 use App\Models\Photo;
 use App\Models\Album;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\PhotosController; 
+use App\Http\Controllers\PhotosController; // Import your controller at the top
 use App\Http\Controllers\AlbumController; // Idagdag ito
 use App\Http\Controllers\AuthController;
 
@@ -21,13 +22,18 @@ use App\Http\Controllers\AuthController;
 // The name 'Photo.update' must match your route() helper in Blade
 
 // web.php
-Route::patch('/photos/{id}', [PhotosController::class, 'update'])->name('Photo.update');
+// Check if the name 'Photo.toggle' matches your Blade file
+// Add this route for the toggle functionality
 
+
+// Ensure this matches the URL in your fetch() call
+// DAPAT '{photo}' at HINDI '{id}'
+Route::patch('/photos/{id}/toggle', [PhotosController::class, 'toggleVisibility'])->name('photos.toggle');
 Route::get('/settings/latest', [SettingsController::class, 'getLatestData']);
 
 Route::post('/settings/update', [SettingsController::class, 'update'])->name('settings.update');
 // Add this line to handle the photo updates (title and description)
-Route::patch('/photos/{photo}', [PhotosController::class, 'update'])->name('Photo.update');
+Route::patch('/photos/{photo}', [PhotosController::class, 'update'])->name('photos.update');
 
 Route::post('/upload', [PhotosController::class, 'store']);
 
@@ -51,7 +57,7 @@ Route::prefix('admin/albums')->middleware('auth')->group(function () {
     Route::delete('/{album}', [AlbumController::class, 'destroy'])->name('albums.destroy');
     
     // Recycle Bin Actions for Albums
-    Route::patch('/restore-album', [AlbumController::class, 'restoreAlbum'])->name('Photo.restore-album');
+    Route::patch('/restore-album', [AlbumController::class, 'restoreAlbum'])->name('photos.restore-album');
     Route::delete('/{albumId}/force-delete', [AlbumController::class, 'forceDeleteAlbum'])->name('Photo.delete-album');
 });
 
@@ -61,7 +67,7 @@ Route::prefix('admin/albums')->middleware('auth')->group(function () {
 Route::prefix('Photo')->middleware('auth')->group(function () {
     Route::post('/store', [PhotosController::class, 'store'])->name('Photo.store');
     Route::patch('/{Photo}/toggle', [PhotosController::class, 'toggle'])->name('Photo.toggle');
-    Route::delete('/{Photo}', [PhotosController::class, 'destroy'])->name('Photo.destroy');
+    Route::delete('/photos/{id}', [PhotoController::class, 'destroy'])->name('photos.destroy');
     Route::patch('/{id}/restore', [PhotosController::class, 'restore'])->name('Photo.restore');
     Route::delete('/{id}/force', [PhotosController::class, 'forceDelete'])->name('Photo.force-delete');
 });

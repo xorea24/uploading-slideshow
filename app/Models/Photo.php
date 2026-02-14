@@ -2,23 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Photo extends Model
 {
-    use HasFactory, SoftDeletes; // Pagsamahin na natin dito para malinis
+    use SoftDeletes;
 
-    protected $table = 'photos';
+    protected $table = 'photos'; // Siguraduhing 'photos' ito
 
-   // app/Models/Photo.php
+    protected $fillable = ['name', 'description', 'image_path', 'is_active', 'album_id'];
 
-      // App/Models/Photo.php o Slide.php
-protected $fillable = ['name', 'description', 'album_id', 'image_path', 'is_active'];
-
-    public function album()
-    {
-        return $this->belongsTo(Album::class);
-    }
+    protected $casts = [
+        'is_active' => 'boolean', // Mahalaga para sa Alpine.js logic
+    ];
 }
