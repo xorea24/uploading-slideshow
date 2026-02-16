@@ -21,6 +21,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('image_path');
             $table->boolean('is_active')->default(true);
+            $table->softDeletes(); // Ito ang magdadagdag ng deleted_at column
             $table->timestamps();
         });
     }

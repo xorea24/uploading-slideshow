@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-
+use App\Http\Controllers\PhotosController;
 use App\Models\Photo;
 use App\Models\Album;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\PhotosController; // Import your controller at the top
 use App\Http\Controllers\AlbumController; // Idagdag ito
 use App\Http\Controllers\AuthController;
 
@@ -26,25 +25,21 @@ use App\Http\Controllers\AuthController;
 // Add this route for the toggle functionality
 
 
-// Ensure this matches the URL in your fetch() call
-// DAPAT '{photo}' at HINDI '{id}'
-Route::patch('/photos/{id}/toggle', [PhotosController::class, 'toggleVisibility'])->name('photos.toggle');
-Route::get('/settings/latest', [SettingsController::class, 'getLatestData']);
+// Ensure this matches the URL in your fetch() 
 
-Route::post('/settings/update', [SettingsController::class, 'update'])->name('settings.update');
-// Add this line to handle the photo updates (title and description)
-Route::patch('/photos/{photo}', [PhotosController::class, 'update'])->name('photos.update');
+Route::get('/dashboard', [PhotosController::class, 'index'])->name('dashboard');
+    // Main Dashboard
 
-Route::post('/upload', [PhotosController::class, 'store']);
-
-Route::patch('/albums/{album}/toggle', [AlbumController::class, 'toggle'])->name('albums.toggle');
-/**
- * DASHBOARD
- */
-// DASHBOARD - Ngayon ay dadaan na sa PhotosController@index para makuha ang $albums
-Route::get('/dashboard', [PhotosController::class, 'index'])
-    ->name('dashboard')
-    ->middleware('auth');
+    // Photo Management Group
+    Route::middleware(['auth'])->group(function () {
+       Route::patch('/admin/photo/photos/{photo}', [PhotosController::class, 'update'])->name('photos.update');
+        // URL: /photos/{photo}/toggle -> route('photos.toggle')    
+        // Ginawa nating PATCH para tama ang RESTful action/get-latest-settings/get-latest-settings
+        Route::get('/photos/{photo}/toggle', [PhotosController::class, 'toggle'])->name('photos.toggle');
+        // 3. STORE / UPLOAD
+        Route::post('/upload', [PhotosController::class, 'store'])->name('photos.store');
+        // 4. DESTROY / DELETE
+    });
 
 /**
  * ALBUM MANAGEMENT
@@ -59,6 +54,7 @@ Route::prefix('admin/albums')->middleware('auth')->group(function () {
     // Recycle Bin Actions for Albums
     Route::patch('/restore-album', [AlbumController::class, 'restoreAlbum'])->name('photos.restore-album');
     Route::delete('/{albumId}/force-delete', [AlbumController::class, 'forceDeleteAlbum'])->name('Photo.delete-album');
+    Route::patch('/albums/{album}/toggle', [AlbumController::class, 'toggle'])->name('albums.toggle');
 });
 
 /**
@@ -67,9 +63,9 @@ Route::prefix('admin/albums')->middleware('auth')->group(function () {
 Route::prefix('Photo')->middleware('auth')->group(function () {
     Route::post('/store', [PhotosController::class, 'store'])->name('Photo.store');
     Route::patch('/{Photo}/toggle', [PhotosController::class, 'toggle'])->name('Photo.toggle');
-    Route::delete('/photos/{id}', [PhotoController::class, 'destroy'])->name('photos.destroy');
-    Route::patch('/{id}/restore', [PhotosController::class, 'restore'])->name('Photo.restore');
-    Route::delete('/{id}/force', [PhotosController::class, 'forceDelete'])->name('Photo.force-delete');
+    Route::delete('{photo}', [PhotosController::class, 'destroy'])->name('photos.destroy');
+    Route::patch('/{id}/restore', [PhotosController::class, 'restore'])->name('photos.restore');
+    Route::delete('/photos/{id}/force', [PhotosController::class, 'forceDelete'])->name('photos.forceDelete');
 });
 
 /**
@@ -77,10 +73,15 @@ Route::prefix('Photo')->middleware('auth')->group(function () {
  *
  *
  */
+Route::get('/settings/latest', [SettingsController::class, 'getLatestData']);
 
+Route::post('/settings/update', [SettingsController::class, 'update'])->name('settings.update');
+// Add this line to handle the photo updates (title and description)
+// Siguraduhin na ang URL ay /photos/{id}/update
 Route::patch('/settings', [SettingsController::class, 'update'])->name('settings.update');
 Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update')->middleware('auth');
 
+// Siguraduhin na ang URL na ito ang tinatawag sa iyong JS fetch
 Route::get('/api/get-latest-settings', function () {
     $lastSetting = DB::table('settings')->max('updated_at');
     $lastImage = DB::table('photos')->max('updated_at');
