@@ -380,7 +380,9 @@
         <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4 bg-white p-5 rounded-[2rem] shadow-sm border border-gray-100">
             <div class="relative w-full md:w-96 group">
                 <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 group-focus-within:text-blue-600 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                 </span>
                 <input type="text" x-model="search" placeholder="Search albums..." 
                     class="pl-12 pr-4 py-3 w-full border border-gray-100 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-gray-50/50 font-bold">
@@ -403,6 +405,7 @@
             <div class="album-card bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 mb-12 transition-all"
                  x-data="{ 
                     myIndex: {{ $albumIndex }},
+                    albumId: {{ $album->id }},
                     localCategory: '{{ addslashes($album->name) }}',
                     localDesc: '{{ addslashes($album->description) }}',
                     showEditModal: false,
@@ -413,11 +416,13 @@
                     photosPerPage: 4,
                     totalPhotos: {{ $groupedSlides->count() }},
                     get totalPhotoPages() { return Math.ceil(this.totalPhotos / this.photosPerPage) },
+                    
                     saveAlbumInfo() {
-                        this.localCategory = this.tempTitle;
-                        this.localDesc = this.tempDesc;
                         this.showEditModal = false;
-                        this.$nextTick(() => this.$refs.editAlbumForm.submit());
+                        this.$nextTick(() => { 
+                            const albumForm = document.getElementById('album-form-' + this.albumId);
+                            if(albumForm) albumForm.submit();
+                        });
                     }
                  }"
                  x-show="search.trim() === '' ? (myIndex > (page - 1) * perPage && myIndex <= page * perPage) : localCategory.toLowerCase().includes(search.toLowerCase())"
@@ -429,7 +434,9 @@
                             <div class="h-8 w-1.5 bg-blue-600 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.4)]"></div>
                             <h3 class="text-3xl font-black text-slate-800 tracking-tighter uppercase" x-text="localCategory"></h3>
                             <button @click="showEditModal = true" class="p-2 text-gray-300 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
                             </button>
                         </div>
                         <p class="text-sm text-slate-400 font-medium italic pl-4" x-text="localDesc || 'No description provided.'"></p>
@@ -441,12 +448,11 @@
                                class="pl-9 pr-4 py-2.5 border-none rounded-xl text-xs focus:ring-4 focus:ring-blue-500/5 outline-none w-48 bg-gray-50/80 font-bold transition-all">
                             <svg class="absolute left-3 top-3 h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="3"/></svg>
                         </div>
-                        
-                        <button @click="tab = 'upload'; isNewAlbum = false; $nextTick(() => { document.getElementById('album_select').value = '{{ $album->id }}' })" 
+                        <button @click="tab = 'upload'; isNewAlbum = false; $nextTick(() => { document.getElementById('album_select').value = albumId })" 
                                 class="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                         </button>
-
+                        
                         <form action="{{ route('albums.destroy', $album->id) }}" method="POST" onsubmit="return confirm('Delete entire album?')">
                             @csrf @method('DELETE')
                             <button type="submit" class="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
@@ -455,134 +461,106 @@
                         </form>
                     </div>
 
-                    <form x-ref="editAlbumForm" action="{{ route('albums.update', $album->id) }}" method="POST" class="hidden">
+                    <form :id="'album-form-' + albumId" action="{{ route('albums.update', $album->id) }}" method="POST" class="hidden">
                         @csrf @method('PATCH')
-                        <input type="hidden" name="name" :value="localCategory">
-                        <input type="hidden" name="description" :value="localDesc">
+                        <input type="hidden" name="name" :value="tempTitle">
+                        <input type="hidden" name="description" :value="tempDesc">
                     </form>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    @forelse($groupedSlides as $photoIdx => $photo)
-    <div x-data="{ 
-            isSavingPhoto: false,
-            photoId: {{ $photo->id }},
-            showPhotoModal: false,
-            editPhotoTitle: '{{ addslashes($photo->name) }}',
-            editPhotoDesc: '{{ addslashes($photo->description) }}',
-            currentPhotoTitle: '{{ addslashes($photo->name) }}',
-            currentPhotoDesc: '{{ addslashes($photo->description) }}',
-            photoActive: {{ $photo->is_active ? 'true' : 'false' }},
+                    @foreach($groupedSlides as $photoIdx => $photo)
+                    <div x-data="{ 
+                            showPhotoModal: false,
+                            photoId: {{ $photo->id }},
+                            editPhotoTitle: '{{ addslashes($photo->name) }}',
+                            editPhotoDesc: '{{ addslashes($photo->description) }}',
+                            photoActive: {{ $photo->is_active ? 'true' : 'false' }},
 
-            async togglePhotoStatus() {
-                if (this.isSavingPhoto) return;
-                this.isSavingPhoto = true;
-                
-                try {
-                    const res = await fetch(`{{ url('/photos') }}/${this.photoId}/toggle`, {
-                        method: 'PATCH',
-                        headers: { 
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}', 
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json'  
-                        },
-                        body: JSON.stringify({ is_active: !this.photoActive })
-                    });
+                           // GAYA NG saveAlbumInfo()
+                            savePhotoInfo() {
+                                this.showPhotoModal = false;
+                                this.$nextTick(() => { 
+                                    const photoForm = document.getElementById('photo-form-' + this.photoId);
+                                    if(photoForm) photoForm.submit();
+                                });
+                            }
+                        }"
+                        x-show="(photoSearch === '' || editPhotoTitle.toLowerCase().includes(photoSearch.toLowerCase())) && ({{ $photoIdx + 1 }} > (photoPage - 1) * photosPerPage && {{ $photoIdx + 1 }} <= photoPage * photosPerPage)"
+                        class="relative bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm group hover:shadow-xl transition-all duration-500">
+                        
+                      <form :id="'photo-form-' + photoId" 
+                            action="{{ route('photos.update', $photo->id) }}" 
+                            method="POST" 
+                            class="hidden">
+                            @csrf 
+                            @method('PATCH')
+                            <input type="hidden" name="name" :value="editPhotoTitle">
+                            <input type="hidden" name="description" :value="editPhotoDesc">
+                        </form>
 
-                    if (res.ok) {
-                        const data = await res.json();
-                        // Update the local state with the value from the database
-                        this.photoActive = !!data.is_active; 
-                    } else {
-                        alert('Server error. Please try again.');
-                    }
-                } catch (error) {
-                    console.error('Toggle failed:', error);
-                    alert('Check your internet connection.');
-                } finally {
-                    this.isSavingPhoto = false;
-                }
-            },
-
-            submitPhotoUpdate() {
-                this.$refs.photoUpdateForm.submit();
-            }
-        }"
-        x-show="(photoSearch === '' || currentPhotoTitle.toLowerCase().includes(photoSearch.toLowerCase())) && ({{ $photoIdx + 1 }} > (photoPage - 1) * photosPerPage && {{ $photoIdx + 1 }} <= photoPage * photosPerPage)"
-        class="relative bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm group hover:shadow-xl transition-all duration-500">
-        
-    <form x-ref="photoUpdateForm" 
-      :action="'admin/photo/photos/' + photoId"
-        method="POST" 
-        class="hidden">
-        @csrf
-        @method('PATCH')
-        <input type="hidden" name="name" :value="editPhotoTitle"> 
-        <input type="hidden" name="description" :value="editPhotoDesc">
-    </form>
-
-        <div class="relative aspect-video bg-gray-100 overflow-hidden">
-            <img src="{{ asset('storage/' . $photo->image_path) }}" 
-                 class="w-full h-full object-cover transition-all duration-700" 
-                 :class="!photoActive ? 'grayscale opacity-40 blur-[1px]' : 'group-hover:scale-110'">
-            
-            <div class="absolute top-3 left-3">
-                <span x-show="photoActive" class="px-2 py-1 bg-green-500 text-white text-[8px] font-black rounded-md uppercase tracking-tighter shadow-sm">Live</span>
-                <span x-show="!photoActive" class="px-2 py-1 bg-gray-500 text-white text-[8px] font-black rounded-md uppercase tracking-tighter shadow-sm">Hidden</span>
-            </div>
-
-            <button @click="showPhotoModal = true" 
-                    class="absolute top-3 right-3 p-2 rounded-xl bg-white/90 backdrop-blur shadow-sm text-gray-500 hover:text-blue-600 transition-all opacity-0 group-hover:opacity-100 z-10">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-width="2"/></svg>
-            </button>
-        </div>
-
-        <div class="p-4 bg-white">
-            <div class="mb-3">
-                <h4 class="text-[11px] font-black text-slate-800 truncate uppercase tracking-tighter" x-text="currentPhotoTitle || 'UNTITLED'"></h4>
-                <p class="text-[10px] text-gray-400 font-medium italic line-clamp-1" x-text="currentPhotoDesc || 'No description.'"></p>
-            </div>
-            
-            <div class="flex gap-2">
-                <a href="{{ route('photos.toggle', $photo->id) }}" 
-                class="flex-1 py-1.5 text-center text-[10px] font-black rounded-lg transition-all border {{ $photo->is_active ? 'bg-white border-gray-200 text-gray-500' : 'bg-blue-600 border-blue-600 text-white' }}">
-                    {{ $photo->is_active ? 'HIDE' : 'SHOW' }}
-                </a>
-                            <form action="{{ route('photos.destroy', $photo->id) }}" method="POST" onsubmit="return confirm('Delete this photo?')" class="flex-shrink-0">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 border border-gray-50 rounded-xl transition-all active:scale-95">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <template x-teleport="body">
-            <div x-show="showPhotoModal" class="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-transition x-cloak>
-                <div @click.away="showPhotoModal = false" class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden">
-                    <div class="p-8">
-                        <h3 class="text-xl font-black text-slate-800 uppercase mb-6">Edit Photo Info</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Title</label>
-                                <input type="text" x-model="editPhotoTitle" class="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-bold">
+                        <div class="relative aspect-video bg-gray-100 overflow-hidden">
+                            <img src="{{ asset('storage/' . $photo->image_path) }}" 
+                                 class="w-full h-full object-cover transition-all duration-700" 
+                                 :class="!photoActive ? 'grayscale opacity-40 blur-[1px]' : 'group-hover:scale-110'">
+                            
+                            <div class="absolute top-3 left-3">
+                                <span x-show="photoActive" class="px-2 py-1 bg-green-500 text-white text-[8px] font-black rounded-md uppercase shadow-sm">Live</span>
+                                <span x-show="!photoActive" class="px-2 py-1 bg-gray-500 text-white text-[8px] font-black rounded-md uppercase shadow-sm">Hidden</span>
                             </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Description</label>
-                                <textarea x-model="editPhotoDesc" rows="3" class="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none text-sm italic"></textarea>
+
+                            <button @click="showPhotoModal = true" 
+                                    class="absolute top-3 right-3 p-2 rounded-xl bg-white/90 backdrop-blur shadow-sm text-gray-500 hover:text-blue-600 transition-all opacity-0 group-hover:opacity-100 z-10">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-width="2"/></svg>
+                            </button>
+                        </div>
+
+                        <div class="p-4 bg-white">
+                            <div class="mb-3">
+                                <h4 class="text-[11px] font-black text-slate-800 truncate uppercase tracking-tighter" x-text="editPhotoTitle || 'UNTITLED'"></h4>
+                                <p class="text-[10px] text-gray-400 font-medium italic line-clamp-1" x-text="editPhotoDesc || 'No description.'"></p>
+                            </div>
+                            
+                            <div class="flex gap-2">
+                                <a href="{{ route('photos.toggle', $photo->id) }}" 
+                                   class="flex-1 py-1.5 text-center text-[10px] font-black rounded-lg transition-all border {{ $photo->is_active ? 'bg-white border-gray-200 text-gray-500' : 'bg-blue-600 border-blue-600 text-white' }}">
+                                    {{ $photo->is_active ? 'HIDE' : 'SHOW' }}
+                                </a>
+                                <form action="{{ route('photos.destroy', $photo->id) }}" method="POST" onsubmit="return confirm('Delete this photo?')" class="flex-shrink-0">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 border border-gray-50 rounded-xl transition-all">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </form>
                             </div>
                         </div>
-                        <div class="mt-8 flex gap-3">
-                            <button @click="showPhotoModal = false" class="flex-1 py-3 text-[11px] font-black text-gray-400 uppercase hover:bg-gray-50 rounded-2xl">Cancel</button>
-                            <button @click="$refs.photoUpdateForm.submit()" class="flex-1 py-3 bg-blue-600 text-white text-[11px] font-black uppercase rounded-2xl shadow-lg hover:bg-blue-700">Save Changes</button>
-                        </div>
+
+                        <template x-teleport="body">
+                            <div x-show="showPhotoModal" class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak x-transition>
+                                <div @click.away="showPhotoModal = false" class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden">
+                                    <div class="p-8">
+                                        <h3 class="text-xl font-black text-slate-800 uppercase mb-6">Edit Photo Info</h3>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Title</label>
+                                                <input type="text" x-model="editPhotoTitle" class="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-bold">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Description</label>
+                                                <textarea x-model="editPhotoDesc" rows="3" class="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none text-sm italic"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="mt-8 flex gap-3">
+                                            <button @click="showPhotoModal = false" class="flex-1 py-3 text-[11px] font-black text-gray-400 uppercase hover:bg-gray-50 rounded-2xl">Cancel</button>
+                                            <button @click="savePhotoInfo()" class="flex-1 py-3 bg-blue-600 text-white text-[11px] font-black uppercase rounded-2xl shadow-lg hover:bg-blue-700">
+        Save Changes
+    </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
                     </div>
-                </div>
-            </div>
-        </template>
-    </div>
-@empty
-    @endforelse
+                    @endforeach
                 </div>
 
                 <div class="flex justify-center mt-12" x-show="totalPhotoPages > 1">
@@ -594,7 +572,7 @@
                 </div>
 
                 <template x-teleport="body">
-                    <div x-show="showEditModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-transition x-cloak>
+                    <div x-show="showEditModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak x-transition>
                         <div @click.away="showEditModal = false" class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden">
                             <div class="p-8">
                                 <h3 class="text-xl font-black text-slate-800 uppercase mb-6">Edit Album Info</h3>
@@ -610,13 +588,12 @@
                                 </div>
                                 <div class="mt-8 flex gap-3">
                                     <button @click="showEditModal = false" class="flex-1 py-3 text-[11px] font-black text-gray-400 uppercase hover:bg-gray-50 rounded-2xl">Cancel</button>
-                                    <button @click="currentPhotoTitle = editPhotoTitle; currentPhotoDesc = editPhotoDesc; $nextTick(() => $refs.photoUpdateForm.submit())" class="flex-1 py-3 bg-blue-600 text-white text-[11px] font-black uppercase rounded-2xl shadow-lg hover:bg-blue-700">Save Changes</button>
+                                    <button @click="saveAlbumInfo()" class="flex-1 py-3 bg-blue-600 text-white text-[11px] font-black uppercase rounded-2xl shadow-lg hover:bg-blue-700">Save Changes</button>
                                 </div>
-                            </div>
+                            </div>  
                         </div>
                     </div>
                 </template>
-
             </div>
         @empty
             <div class="text-center py-32 bg-white rounded-[3rem] border-2 border-dashed border-gray-100">

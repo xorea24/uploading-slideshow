@@ -31,8 +31,11 @@ Route::get('/dashboard', [PhotosController::class, 'index'])->name('dashboard');
     // Main Dashboard
 
     // Photo Management Group
-    Route::middleware(['auth'])->group(function () {
-       Route::patch('/admin/photo/photos/{photo}', [PhotosController::class, 'update'])->name('photos.update');
+// Sa web.php
+Route::middleware(['auth'])->group(function () {
+    // Siguraduhin na ganito ang pagkakasulat para tumugma sa route helper
+    // Siguraduhin na ang name() ay 'photos.update'
+        Route::patch('/admin/photos/{id}', [PhotosController::class, 'update'])->name('photos.update');
         // URL: /photos/{photo}/toggle -> route('photos.toggle')    
         // Ginawa nating PATCH para tama ang RESTful action/get-latest-settings/get-latest-settings
         Route::get('/photos/{photo}/toggle', [PhotosController::class, 'toggle'])->name('photos.toggle');
