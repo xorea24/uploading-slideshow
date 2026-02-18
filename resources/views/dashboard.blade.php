@@ -211,170 +211,170 @@
             <!-- UPLOAD TAB CONTENT                                           -->
             <!-- File upload form with drag & drop support                    -->
             <!-- ============================================================ -->
-<div x-show="tab === 'upload'" 
-     class="fixed inset-0 z-50 overflow-y-auto" 
-     x-cloak 
-     x-transition:enter="transition ease-out duration-300"
-     x-transition:enter-start="opacity-0"
-     x-transition:enter-end="opacity-100"
-     x-data="{ 
-        isNewAlbum: false,
-        newAlbumName: '',
-        uploadRows: [
-            { id: Date.now(), preview: null, title: '' }
-        ],
-        existingAlbums: [
-            @foreach($albums as $album)
-                '{{ strtolower(addslashes($album->name)) }}',
-            @endforeach
-        ],
-        get isDuplicate() {
-            return this.existingAlbums.includes(this.newAlbumName.trim().toLowerCase());
-        },
-        addPhotoRow() {
-            this.uploadRows.push({ id: Date.now(), preview: null, title: '' });
-        },
-        removePhotoRow(index) {
-            this.uploadRows.splice(index, 1);
-        },
-        handleFileChange(event, index) {
-            const file = event.target.files[0];
-            if (file) {
-                // Generate Preview
-                this.uploadRows[index].preview = URL.createObjectURL(file);
-                
-                // Default Title Logic: Kunin ang filename, tanggalin ang extension
-                let fileName = file.name.split('.').slice(0, -1).join('.');
-                
-                // I-set ang title kung wala pang nilalagay ang user
-                if (!this.uploadRows[index].title) {
-                    this.uploadRows[index].title = fileName;
+        <div x-show="tab === 'upload'" 
+                class="fixed inset-0 z-50 overflow-y-auto" 
+                x-cloak 
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-data="{ 
+            isNewAlbum: false,
+            newAlbumName: '',
+            uploadRows: [
+                { id: Date.now(), preview: null, title: '' }
+            ],
+            existingAlbums: [
+                @foreach($albums as $album)
+                    '{{ strtolower(addslashes($album->name)) }}',
+                @endforeach
+            ],
+            get isDuplicate() {
+                return this.existingAlbums.includes(this.newAlbumName.trim().toLowerCase());
+            },
+            addPhotoRow() {
+                this.uploadRows.push({ id: Date.now(), preview: null, title: '' });
+            },
+            removePhotoRow(index) {
+                this.uploadRows.splice(index, 1);
+            },
+            handleFileChange(event, index) {
+                const file = event.target.files[0];
+                if (file) {
+                    // Generate Preview
+                    this.uploadRows[index].preview = URL.createObjectURL(file);
+                    
+                    // Default Title Logic: Kunin ang filename, tanggalin ang extension
+                    let fileName = file.name.split('.').slice(0, -1).join('.');
+                    
+                    // I-set ang title kung wala pang nilalagay ang user
+                    if (!this.uploadRows[index].title) {
+                        this.uploadRows[index].title = fileName;
+                    }
                 }
             }
-        }
-     }">
-    
-    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="tab = 'manage'"></div>
+        }">
+        
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="tab = 'manage'"></div>
 
-    <div class="relative min-h-screen flex items-center justify-center p-4">
-        <div class="max-w-5xl w-full bg-white p-8 rounded-3xl shadow-2xl border border-gray-100 relative" @click.stop>
-            
-            <button @click="tab = 'manage'" class="absolute top-6 right-6 text-gray-400 hover:text-blue-600 transition-colors">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-
-            <div class="mb-8">
-                <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tight">Upload New Photos</h2>
-                <p class="text-sm text-gray-500">Add images to your library or create a new collection.</p>
-            </div>
-
-            <form action="{{ route('Photo.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
-                @csrf
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+            <div class="max-w-5xl w-full bg-white p-8 rounded-3xl shadow-2xl border border-gray-100 relative" @click.stop>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
-                    <div class="space-y-2">
-                        <label class="block text-[10px] font-black text-blue-900 uppercase tracking-widest">Target Album</label>
-                        <select name="album_id" id="album_select" 
-                                @change="isNewAlbum = $el.value === 'new'" 
-                                class="w-full px-4 py-3 rounded-xl border border-blue-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold text-gray-700 bg-white transition-all">
-                            <option value="">-- No Album (Unassigned) --</option>
-                            @foreach($albums as $album)
-                                <option value="{{ $album->id }}">{{ $album->name }}</option>
-                            @endforeach
-                            <option value="new" class="font-bold text-blue-600">+ Create New Album</option>
-                        </select>
-                    </div>
+                <button @click="tab = 'manage'" class="absolute top-6 right-6 text-gray-400 hover:text-blue-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
 
-                    <div x-show="isNewAlbum" x-transition.scale.origin.left class="md:col-span-2 space-y-2">
-                        <label class="block text-[10px] font-black text-blue-900 uppercase tracking-widest">New Album Details</label>
-                        <div class="flex flex-col md:flex-row gap-3">
-                            <div class="flex-1 relative">
-                                <input type="text" 
-                                       name="new_album_name" 
-                                       x-model="newAlbumName"
-                                       placeholder="Album Title" 
-                                       :class="isDuplicate ? 'border-red-500 focus:ring-red-500/10 focus:border-red-500' : 'border-blue-200 focus:ring-blue-500/10 focus:border-blue-500'"
-                                       class="w-full px-4 py-3 rounded-xl border text-sm font-bold transition-all outline-none">
-                                
-                                <template x-if="isDuplicate">
-                                    <div class="absolute -bottom-5 left-0 text-[9px] text-red-600 font-black uppercase tracking-tighter">
-                                        ⚠ Name already exists! Use a different name.
-                                    </div>
-                                </template>
-                            </div>
-                            <input type="text" name="new_album_desc" placeholder="Album Subtitle/Description" class="flex-1 px-4 py-3 rounded-xl border border-blue-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm bg-white transition-all">
-                        </div>
-                    </div>
+                <div class="mb-8">
+                    <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tight">Upload New Photos</h2>
+                    <p class="text-sm text-gray-500">Add images to your library or create a new collection.</p>
                 </div>
 
-                <hr class="border-gray-100">
+                <form action="{{ route('Photo.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                    @csrf
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-black text-blue-900 uppercase tracking-widest">Target Album</label>
+                            <select name="album_id" id="album_select" 
+                                    @change="isNewAlbum = $el.value === 'new'" 
+                                    class="w-full px-4 py-3 rounded-xl border border-blue-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm font-bold text-gray-700 bg-white transition-all">
+                                <option value="">-- No Album (Unassigned) --</option>
+                                @foreach($albums as $album)
+                                    <option value="{{ $album->id }}">{{ $album->name }}</option>
+                                @endforeach
+                                <option value="new" class="font-bold text-blue-600">+ Create New Album</option>
+                            </select>
+                        </div>
 
-                <div class="space-y-4 max-h-[40vh] overflow-y-auto px-2 custom-scrollbar">
-                    <template x-for="(row, index) in uploadRows" :key="row.id">
-                        <div class="flex flex-col md:flex-row gap-6 p-5 bg-white border border-gray-100 rounded-2xl relative group hover:border-blue-200 transition-all hover:shadow-sm">
-                            
-                            <div class="w-full md:w-32 h-32 bg-gray-50 rounded-xl flex-shrink-0 border-2 border-dashed border-gray-200 group-hover:border-blue-300 overflow-hidden relative transition-colors">
-                                <template x-if="row.preview">
-                                    <img :src="row.preview" class="w-full h-full object-cover">
-                                </template>
-                                <template x-if="!row.preview">
-                                    <div class="flex flex-col items-center justify-center h-full text-gray-400">
-                                        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                        <span class="text-[8px] font-black uppercase">Browse</span>
-                                    </div>
-                                </template>
-                                <input type="file" name="images[]" required class="absolute inset-0 opacity-0 cursor-pointer" @change="handleFileChange($event, index)">
-                            </div>
-
-                            <div class="flex-1 grid grid-cols-1 gap-3">
-                                <div>
-                                    <label class="text-[9px] font-bold text-gray-400 uppercase ml-1">Image Title</label>
+                        <div x-show="isNewAlbum" x-transition.scale.origin.left class="md:col-span-2 space-y-2">
+                            <label class="block text-[10px] font-black text-blue-900 uppercase tracking-widest">New Album Details</label>
+                            <div class="flex flex-col md:flex-row gap-3">
+                                <div class="flex-1 relative">
                                     <input type="text" 
-                                           name="titles[]" 
-                                           x-model="row.title"
-                                           placeholder="Enter title (or leave blank for filename)" 
-                                           class="w-full px-5 py-3 rounded-xl border border-gray-100 text-sm focus:border-blue-500 outline-none font-bold text-gray-700 bg-gray-50/30">
+                                        name="new_album_name" 
+                                        x-model="newAlbumName"
+                                        placeholder="Album Title" 
+                                        :class="isDuplicate ? 'border-red-500 focus:ring-red-500/10 focus:border-red-500' : 'border-blue-200 focus:ring-blue-500/10 focus:border-blue-500'"
+                                        class="w-full px-4 py-3 rounded-xl border text-sm font-bold transition-all outline-none">
+                                    
+                                    <template x-if="isDuplicate">
+                                        <div class="absolute -bottom-5 left-0 text-[9px] text-red-600 font-black uppercase tracking-tighter">
+                                            ⚠ Name already exists! Use a different name.
+                                        </div>
+                                    </template>
                                 </div>
-                                <div>
-                                    <label class="text-[9px] font-bold text-gray-400 uppercase ml-1">Description (Optional)</label>
-                                    <textarea name="descriptions[]" 
-                                              placeholder="Write a subtitle..." 
-                                              class="w-full px-5 py-3 rounded-xl border border-gray-100 text-sm focus:border-blue-500 outline-none h-16 bg-gray-50/30"></textarea>
-                                </div>
+                                <input type="text" name="new_album_desc" placeholder="Album Subtitle/Description" class="flex-1 px-4 py-3 rounded-xl border border-blue-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm bg-white transition-all">
                             </div>
-
-                            <button type="button" x-show="uploadRows.length > 1" @click="removePhotoRow(index)" class="absolute -top-2 -right-2 bg-white text-gray-400 border border-gray-100 rounded-full p-1.5 shadow-md hover:text-red-600 hover:border-red-100 transition-all">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
                         </div>
-                    </template>
-                </div>
+                    </div>
 
-                <div class="flex justify-between items-center pt-6 border-t border-gray-50">
-                    <button type="button" @click="addPhotoRow()" class="flex items-center gap-2 text-blue-600 font-black text-xs uppercase tracking-widest hover:text-blue-800 transition-colors">
-                        <div class="p-1.5 bg-blue-50 rounded-lg">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                        </div>
-                        Add Another Photo
-                    </button>
+                    <hr class="border-gray-100">
 
-                    <button type="submit" 
+                    <div class="space-y-4 max-h-[40vh] overflow-y-auto px-2 custom-scrollbar">
+                        <template x-for="(row, index) in uploadRows" :key="row.id">
+                            <div class="flex flex-col md:flex-row gap-6 p-5 bg-white border border-gray-100 rounded-2xl relative group hover:border-blue-200 transition-all hover:shadow-sm">
+                                
+                                <div class="w-full md:w-32 h-32 bg-gray-50 rounded-xl flex-shrink-0 border-2 border-dashed border-gray-200 group-hover:border-blue-300 overflow-hidden relative transition-colors">
+                                    <template x-if="row.preview">
+                                        <img :src="row.preview" class="w-full h-full object-cover">
+                                    </template>
+                                    <template x-if="!row.preview">
+                                        <div class="flex flex-col items-center justify-center h-full text-gray-400">
+                                            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            <span class="text-[8px] font-black uppercase">Browse</span>
+                                        </div>
+                                    </template>
+                                    <input type="file" name="images[]" required class="absolute inset-0 opacity-0 cursor-pointer" @change="handleFileChange($event, index)">
+                                </div>
+
+                                <div class="flex-1 grid grid-cols-1 gap-3">
+                                    <div>
+                                        <label class="text-[9px] font-bold text-gray-400 uppercase ml-1">Image Title</label>
+                                        <input type="text" 
+                                            name="titles[]" 
+                                            x-model="row.title"
+                                            placeholder="Enter title (or leave blank for filename)" 
+                                            class="w-full px-5 py-3 rounded-xl border border-gray-100 text-sm focus:border-blue-500 outline-none font-bold text-gray-700 bg-gray-50/30">
+                                    </div>
+                                    <div>
+                                        <label class="text-[9px] font-bold text-gray-400 uppercase ml-1">Description (Optional)</label>
+                                        <textarea name="descriptions[]" 
+                                                placeholder="Write a subtitle..." 
+                                                class="w-full px-5 py-3 rounded-xl border border-gray-100 text-sm focus:border-blue-500 outline-none h-16 bg-gray-50/30"></textarea>
+                                    </div>
+                                </div>
+
+                                <button type="button" x-show="uploadRows.length > 1" @click="removePhotoRow(index)" class="absolute -top-2 -right-2 bg-white text-gray-400 border border-gray-100 rounded-full p-1.5 shadow-md hover:text-red-600 hover:border-red-100 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-6 border-t border-gray-50">
+                        <button type="button" @click="addPhotoRow()" class="flex items-center gap-2 text-blue-600 font-black text-xs uppercase tracking-widest hover:text-blue-800 transition-colors">
+                            <div class="p-1.5 bg-blue-50 rounded-lg">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            </div>
+                            Add Another Photo
+                        </button>
+
+                       <button type="submit" 
                             :disabled="isNewAlbum && (isDuplicate || newAlbumName.trim() === '')"
                             :class="(isNewAlbum && (isDuplicate || newAlbumName.trim() === '')) ? 'bg-gray-200 cursor-not-allowed text-gray-400 shadow-none' : 'bg-blue-700 hover:bg-blue-800 text-white shadow-xl shadow-blue-200'"
                             class="px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95">
                         Save All Images
                     </button>
-                </div>
-            </form>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
-      <!-- ============================================================ -->
-      <!-- MANAGE ALBUMS TAB CONTENT                                    -->
-      <!-- Display, search, edit & manage Photo albums                 -->
-      <!-- ============================================================ -->
-<div x-show="tab === 'manage'" x-cloak x-transition:enter="transition ease-out duration-300">
+        <!-- ============================================================ -->
+        <!-- MANAGE ALBUMS TAB CONTENT                                    -->
+        <!-- Display, search, edit & manage Photo albums                 -->
+        <!-- ============================================================ -->
+  <div x-show="tab === 'manage'" x-cloak x-transition:enter="transition ease-out duration-300">
     <div class="max-w-6xl mx-auto px-4 pb-20">
         
         <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4 bg-white p-5 rounded-[2rem] shadow-sm border border-gray-100">
@@ -403,7 +403,7 @@
             @endphp
     
             <div class="album-card bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 mb-12 transition-all"
-                 x-data="{ 
+                x-data="{ 
                     myIndex: {{ $albumIndex }},
                     albumId: {{ $album->id }},
                     localCategory: '{{ addslashes($album->name) }}',
@@ -411,11 +411,18 @@
                     showEditModal: false,
                     tempTitle: '{{ addslashes($album->name) }}',
                     tempDesc: '{{ addslashes($album->description) }}',
+                    
+                    /* Photo Management State */
                     photoSearch: '',
                     photoPage: 1,
                     photosPerPage: 4,
                     totalPhotos: {{ $groupedSlides->count() }},
-                    get totalPhotoPages() { return Math.ceil(this.totalPhotos / this.photosPerPage) },
+                    
+                    get totalPhotoPages() { 
+                        // Kung may search, i-disable ang pagination counts (ipakita lahat ng results)
+                        if (this.photoSearch.trim() !== '') return 1;
+                        return Math.ceil(this.totalPhotos / this.photosPerPage);
+                    },
                     
                     saveAlbumInfo() {
                         this.showEditModal = false;
@@ -424,9 +431,9 @@
                             if(albumForm) albumForm.submit();
                         });
                     }
-                 }"
-                 x-show="search.trim() === '' ? (myIndex > (page - 1) * perPage && myIndex <= page * perPage) : localCategory.toLowerCase().includes(search.toLowerCase())"
-                 x-transition:enter="transition ease-out duration-300">
+                }"
+                x-show="search.trim() === '' ? (myIndex > (page - 1) * perPage && myIndex <= page * perPage) : localCategory.toLowerCase().includes(search.toLowerCase())"
+                x-transition:enter="transition ease-out duration-300">
 
                 <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-8 border-b border-gray-50 gap-6">
                     <div class="flex-1 space-y-2">
@@ -445,9 +452,10 @@
                     <div class="flex items-center gap-3">
                         <div class="relative">
                             <input type="text" x-model="photoSearch" @input="photoPage = 1" placeholder="Search photos..." 
-                               class="pl-9 pr-4 py-2.5 border-none rounded-xl text-xs focus:ring-4 focus:ring-blue-500/5 outline-none w-48 bg-gray-50/80 font-bold transition-all">
+                                class="pl-9 pr-4 py-2.5 border-none rounded-xl text-xs focus:ring-4 focus:ring-blue-500/5 outline-none w-48 bg-gray-50/80 font-bold transition-all">
                             <svg class="absolute left-3 top-3 h-3.5 w-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="3"/></svg>
                         </div>
+                        
                         <button @click="tab = 'upload'; isNewAlbum = false; $nextTick(() => { document.getElementById('album_select').value = albumId })" 
                                 class="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
@@ -467,103 +475,109 @@
                         <input type="hidden" name="description" :value="tempDesc">
                     </form>
                 </div>
-
+                
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    @foreach($groupedSlides as $photoIdx => $photo)
-                    <div x-data="{ 
-                            showPhotoModal: false,
-                            photoId: {{ $photo->id }},
-                            editPhotoTitle: '{{ addslashes($photo->name) }}',
-                            editPhotoDesc: '{{ addslashes($photo->description) }}',
-                            photoActive: {{ $photo->is_active ? 'true' : 'false' }},
+                    @forelse($album->slides as $photoIdx => $photoItem)
+                        <div x-data="{ 
+                                showPhotoModal: false,
+                                photoId: {{ $photoItem->id }},  
+                                localPhotoTitle: '{{ addslashes($photoItem->name) }}',
+                                localPhotoDesc: '{{ addslashes($photoItem->description) }}',
+                                tempPhotoTitle: '{{ addslashes($photoItem->name) }}',
+                                tempPhotoDesc: '{{ addslashes($photoItem->description) }}',
+                                photoActive: {{ $photoItem->is_active ? 'true' : 'false' }},
 
-                           // GAYA NG saveAlbumInfo()
-                            savePhotoInfo() {
-                                this.showPhotoModal = false;
-                                this.$nextTick(() => { 
+                               savephotoInfo() {
+                                    this.showPhotoModal = false;
+                                    // Hanapin ang form gamit ang ID na unique bawat photo
                                     const photoForm = document.getElementById('photo-form-' + this.photoId);
-                                    if(photoForm) photoForm.submit();
-                                });
-                            }
-                        }"
-                        x-show="(photoSearch === '' || editPhotoTitle.toLowerCase().includes(photoSearch.toLowerCase())) && ({{ $photoIdx + 1 }} > (photoPage - 1) * photosPerPage && {{ $photoIdx + 1 }} <= photoPage * photosPerPage)"
-                        class="relative bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm group hover:shadow-xl transition-all duration-500">
-                        
-                      <form :id="'photo-form-' + photoId" 
-                            action="{{ route('photos.update', $photo->id) }}" 
-                            method="POST" 
-                            class="hidden">
-                            @csrf 
-                            @method('PATCH')
-                            <input type="hidden" name="name" :value="editPhotoTitle">
-                            <input type="hidden" name="description" :value="editPhotoDesc">
-                        </form>
-
-                        <div class="relative aspect-video bg-gray-100 overflow-hidden">
-                            <img src="{{ asset('storage/' . $photo->image_path) }}" 
-                                 class="w-full h-full object-cover transition-all duration-700" 
-                                 :class="!photoActive ? 'grayscale opacity-40 blur-[1px]' : 'group-hover:scale-110'">
+                                    if (photoForm) {
+                                        photoForm.submit();
+                                    }
+                                }
+                            }"
+                            {{-- Logic para gumana ang search kahit nasa next page --}}
+                            x-show="(function() {
+                                const matches = localPhotoTitle.toLowerCase().includes(photoSearch.toLowerCase());
+                                if (!matches) return false;
+                                // Kung may search, ipakita lahat ng match agad. 
+                                // Kung walang search, gamitin ang pagination.
+                                if (photoSearch.trim() !== '') return true;
+                                const idx = {{ $photoIdx + 1 }};
+                                return idx > (photoPage - 1) * photosPerPage && idx <= photoPage * photosPerPage;
+                            })()"
+                            class="relative bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm group hover:shadow-xl transition-all duration-500">
                             
-                            <div class="absolute top-3 left-3">
-                                <span x-show="photoActive" class="px-2 py-1 bg-green-500 text-white text-[8px] font-black rounded-md uppercase shadow-sm">Live</span>
-                                <span x-show="!photoActive" class="px-2 py-1 bg-gray-500 text-white text-[8px] font-black rounded-md uppercase shadow-sm">Hidden</span>
+                            <form :id="'photo-form-' + photoId" action="{{ route('photo.update', $photoItem->id) }}" method="POST" class="hidden">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="name" :value="tempPhotoTitle">
+                                <input type="hidden" name="description" :value="tempPhotoDesc"> 
+                            </form>
+
+                            <div class="relative aspect-video bg-gray-100 overflow-hidden">
+                                <img src="{{ asset('storage/' . $photoItem->image_path) }}" 
+                                    class="w-full h-full object-cover transition-all duration-700" 
+                                    :class="!photoActive ? 'grayscale opacity-40 blur-[1px]' : 'group-hover:scale-110'">
+                                
+                                <div class="absolute top-3 left-3">
+                                    <span x-show="photoActive" class="px-2 py-1 bg-green-500 text-white text-[8px] font-black rounded-md uppercase shadow-sm">Live</span>
+                                    <span x-show="!photoActive" class="px-2 py-1 bg-gray-500 text-white text-[8px] font-black rounded-md uppercase shadow-sm">Hidden</span>
+                                </div>
+
+                                <button @click="showPhotoModal = true" 
+                                        class="absolute top-3 right-3 p-2 rounded-xl bg-white/90 backdrop-blur shadow-sm text-gray-500 hover:text-blue-600 transition-all opacity-0 group-hover:opacity-100 z-10">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-width="2"/></svg>
+                                </button>
                             </div>
 
-                            <button @click="showPhotoModal = true" 
-                                    class="absolute top-3 right-3 p-2 rounded-xl bg-white/90 backdrop-blur shadow-sm text-gray-500 hover:text-blue-600 transition-all opacity-0 group-hover:opacity-100 z-10">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-width="2"/></svg>
-                            </button>
-                        </div>
-
-                        <div class="p-4 bg-white">
-                            <div class="mb-3">
-                                <h4 class="text-[11px] font-black text-slate-800 truncate uppercase tracking-tighter" x-text="editPhotoTitle || 'UNTITLED'"></h4>
-                                <p class="text-[10px] text-gray-400 font-medium italic line-clamp-1" x-text="editPhotoDesc || 'No description.'"></p>
-                            </div>
-                            
-                            <div class="flex gap-2">
-                                <a href="{{ route('photos.toggle', $photo->id) }}" 
-                                   class="flex-1 py-1.5 text-center text-[10px] font-black rounded-lg transition-all border {{ $photo->is_active ? 'bg-white border-gray-200 text-gray-500' : 'bg-blue-600 border-blue-600 text-white' }}">
-                                    {{ $photo->is_active ? 'HIDE' : 'SHOW' }}
-                                </a>
-                                <form action="{{ route('photos.destroy', $photo->id) }}" method="POST" onsubmit="return confirm('Delete this photo?')" class="flex-shrink-0">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 border border-gray-50 rounded-xl transition-all">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <template x-teleport="body">
-                            <div x-show="showPhotoModal" class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak x-transition>
-                                <div @click.away="showPhotoModal = false" class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden">
-                                    <div class="p-8">
-                                        <h3 class="text-xl font-black text-slate-800 uppercase mb-6">Edit Photo Info</h3>
-                                        <div class="space-y-4">
-                                            <div>
-                                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Title</label>
-                                                <input type="text" x-model="editPhotoTitle" class="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-bold">
-                                            </div>
-                                            <div>
-                                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Description</label>
-                                                <textarea x-model="editPhotoDesc" rows="3" class="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none text-sm italic"></textarea>
-                                            </div>
-                                        </div>
-                                        <div class="mt-8 flex gap-3">
-                                            <button @click="showPhotoModal = false" class="flex-1 py-3 text-[11px] font-black text-gray-400 uppercase hover:bg-gray-50 rounded-2xl">Cancel</button>
-                                            <button @click="savePhotoInfo()" class="flex-1 py-3 bg-blue-600 text-white text-[11px] font-black uppercase rounded-2xl shadow-lg hover:bg-blue-700">
-        Save Changes
-    </button>
-                                    </div>
+                            <div class="p-4 bg-white">
+                                <div class="mb-3">
+                                    <h4 class="text-[11px] font-black text-slate-800 truncate uppercase tracking-tighter" x-text="localPhotoTitle || 'UNTITLED'"></h4>
+                                    <p class="text-[10px] text-gray-400 font-medium italic line-clamp-1" x-text="localPhotoDesc || 'No description.'"></p>
+                                </div>
+                                
+                                <div class="flex gap-2">
+                                    <a href="{{ route('photos.toggle', $photoItem->id) }}" 
+                                    class="flex-1 py-1.5 text-center text-[10px] font-black rounded-lg transition-all border {{ $photoItem->is_active ? 'bg-white border-gray-200 text-gray-500' : 'bg-blue-600 border-blue-600 text-white' }}">
+                                        {{ $photoItem->is_active ? 'HIDE' : 'SHOW' }}
+                                    </a>
+                                    <form action="{{ route('photos.destroy', $photoItem->id) }}" method="POST" onsubmit="return confirm('Delete this photo?')" class="flex-shrink-0">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 border border-gray-50 rounded-xl transition-all">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
-                        </template>
-                    </div>
-                    @endforeach
+
+                            <template x-teleport="body">
+                                <div x-show="showPhotoModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                                    <div @click.away="showPhotoModal = false" class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
+                                        <h3 class="text-xl font-bold text-gray-900 mb-6 uppercase tracking-tight">Edit Photo Info</h3>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Title</label>
+                                                <input type="text" x-model="tempPhotoTitle" class="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Description</label>
+                                                <textarea x-model="tempPhotoDesc" rows="3" class="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-3 mt-8">
+                                            <button @click="showPhotoModal = false" class="flex-1 px-6 py-3 text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors">CANCEL</button>
+                                            <button @click="savephotoInfo()" class="flex-1 px-6 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">SAVE CHANGES</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    @empty
+                        <div class="col-span-full text-center py-10 text-gray-400 italic text-xs">No photos in this album.</div>
+                    @endforelse
                 </div>
 
-                <div class="flex justify-center mt-12" x-show="totalPhotoPages > 1">
+                <div class="flex justify-center mt-12" x-show="totalPhotoPages > 1 && photoSearch.trim() === ''">
                     <div class="flex items-center gap-1 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-lg">
                         <button @click="if(photoPage > 1) { photoPage--; $el.closest('.album-card').scrollIntoView({behavior: 'smooth'}); }" :disabled="photoPage === 1" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl disabled:opacity-30 text-gray-600 hover:bg-blue-50">Prev</button>
                         <div class="px-6 text-[10px] font-black text-slate-300 uppercase">Page <span class="text-blue-600" x-text="photoPage"></span> / <span x-text="totalPhotoPages"></span></div>
@@ -575,25 +589,25 @@
                     <div x-show="showEditModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak x-transition>
                         <div @click.away="showEditModal = false" class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden">
                             <div class="p-8">
-                                <h3 class="text-xl font-black text-slate-800 uppercase mb-6">Edit Album Info</h3>
+                                <h3 class="text-xl font-black text-slate-800 uppercase mb-6 tracking-tight">Edit Album Info</h3>
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Album Title</label>
-                                        <input type="text" x-model="tempTitle" class="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-bold">
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Album Title</label>
+                                        <input type="text" x-model="tempTitle" class="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-bold text-slate-700">
                                     </div>
                                     <div>
-                                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Description</label>
-                                        <textarea x-model="tempDesc" rows="3" class="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none text-sm italic"></textarea>
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Description</label>
+                                        <textarea x-model="tempDesc" rows="3" class="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none text-sm italic text-slate-600"></textarea>
                                     </div>
                                 </div>
                                 <div class="mt-8 flex gap-3">
-                                    <button @click="showEditModal = false" class="flex-1 py-3 text-[11px] font-black text-gray-400 uppercase hover:bg-gray-50 rounded-2xl">Cancel</button>
-                                    <button @click="saveAlbumInfo()" class="flex-1 py-3 bg-blue-600 text-white text-[11px] font-black uppercase rounded-2xl shadow-lg hover:bg-blue-700">Save Changes</button>
+                                    <button @click="showEditModal = false" class="flex-1 py-3 text-[11px] font-black text-gray-400 uppercase hover:bg-gray-50 rounded-2xl transition-colors">Cancel</button>
+                                    <button @click="saveAlbumInfo()" class="flex-1 py-3 bg-blue-600 text-white text-[11px] font-black uppercase rounded-2xl shadow-lg hover:bg-blue-700 active:scale-95 transition-all">Save Changes</button>
                                 </div>
                             </div>  
                         </div>
                     </div>
-                </template>
+                </template> 
             </div>
         @empty
             <div class="text-center py-32 bg-white rounded-[3rem] border-2 border-dashed border-gray-100">
@@ -964,34 +978,7 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
 </style>
-<script>
-    $('.photo-status-button').on('click', function() {
-        var button = $(this);
-        var photoId = button.data('photo-id');
-        var isActive = button.data('is-active');
-        
-        $.ajax({
-            url: '/photos/' + photoId + '/toggle',
-            method: 'POST',
-            data: {
-                _token: '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                if (response.success) {
-                    button.data('is-active', !isActive);
-                    button.toggleClass('bg-slate-800 text-white border-slate-800 hover:bg-slate-900', isActive);
-                    button.toggleClass('bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100', !isActive);
-                    button.text(isActive ? 'ACTIVATE' : 'HIDE');
-                } else {
-                    alert('Failed to update photo status.');
-                }
-            },
-            error: function() {
-                alert('An error occurred while updating photo status.');
-            }
-        });
-    });
-</script>
+
 </body>
 </html>
 
