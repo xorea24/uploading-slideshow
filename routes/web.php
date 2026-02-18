@@ -26,20 +26,16 @@ use App\Http\Controllers\AuthController;
 
 
 // Ensure this matches the URL in your fetch() 
-
-Route::get('/dashboard', [PhotosController::class, 'index'])->name('dashboard');
-    // Main Dashboard
-
-    // Photo Management Group
-// Sa web.php
 Route::middleware(['auth'])->group(function () {
-    // Sa routes/web.php
-Route::patch('/photos/{photo}/rename', [PhotosController::class, 'update'])->name('photo.update');
-        // URL: /photos/{photo}/toggle -> route('photos.toggle')    
-        // Ginawa nating PATCH para tama ang RESTful action/get-latest-settings/get-latest-settings
-        Route::get('/photos/{photo}/toggle', [PhotosController::class, 'toggle'])->name('photos.toggle');
-        // 3. STORE / UPLOAD    
-        Route::post('/upload', [PhotosController::class, 'store'])->name('photos.store');
+    // DASHBOARD
+    Route::get('/dashboard', [PhotosController::class, 'index'])->name('dashboard');
+    // PHOTO MANAGEMENT
+    Route::post('/upload', [PhotosController::class, 'store'])->name('photos.store');
+    // Siguraduhin na 'photos.update' ang name at PATCH ang method
+    // Siguraduhin na PATCH ito at tumutugma ang 'photo.update'
+    Route::patch('/photos', [PhotosController::class, 'update'])->name('photo.update');
+    Route::get('/photos/{photo}/toggle', [PhotosController::class, 'toggle'])->name('photos.toggle');
+    Route::delete('/photos/{photo}', [PhotosController::class, 'destroy'])->name('photos.destroy');
         // 4. DESTROY / DELETE
     });
 

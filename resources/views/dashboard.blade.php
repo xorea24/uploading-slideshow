@@ -374,7 +374,7 @@
         <!-- MANAGE ALBUMS TAB CONTENT                                    -->
         <!-- Display, search, edit & manage Photo albums                 -->
         <!-- ============================================================ -->
-  <div x-show="tab === 'manage'" x-cloak x-transition:enter="transition ease-out duration-300">
+<div x-show="tab === 'manage'" x-cloak x-transition:enter="transition ease-out duration-300">
     <div class="max-w-6xl mx-auto px-4 pb-20">
         
         <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4 bg-white p-5 rounded-[2rem] shadow-sm border border-gray-100">
@@ -412,24 +412,14 @@
                     tempTitle: '{{ addslashes($album->name) }}',
                     tempDesc: '{{ addslashes($album->description) }}',
                     
-                    /* Photo Management State */
                     photoSearch: '',
                     photoPage: 1,
                     photosPerPage: 4,
                     totalPhotos: {{ $groupedSlides->count() }},
                     
                     get totalPhotoPages() { 
-                        // Kung may search, i-disable ang pagination counts (ipakita lahat ng results)
                         if (this.photoSearch.trim() !== '') return 1;
                         return Math.ceil(this.totalPhotos / this.photosPerPage);
-                    },
-                    
-                    saveAlbumInfo() {
-                        this.showEditModal = false;
-                        this.$nextTick(() => { 
-                            const albumForm = document.getElementById('album-form-' + this.albumId);
-                            if(albumForm) albumForm.submit();
-                        });
                     }
                 }"
                 x-show="search.trim() === '' ? (myIndex > (page - 1) * perPage && myIndex <= page * perPage) : localCategory.toLowerCase().includes(search.toLowerCase())"
@@ -441,9 +431,7 @@
                             <div class="h-8 w-1.5 bg-blue-600 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.4)]"></div>
                             <h3 class="text-3xl font-black text-slate-800 tracking-tighter uppercase" x-text="localCategory"></h3>
                             <button @click="showEditModal = true" class="p-2 text-gray-300 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                             </button>
                         </div>
                         <p class="text-sm text-slate-400 font-medium italic pl-4" x-text="localDesc || 'No description provided.'"></p>
@@ -468,52 +456,27 @@
                             </button>
                         </form>
                     </div>
-
-                    <form :id="'album-form-' + albumId" action="{{ route('albums.update', $album->id) }}" method="POST" class="hidden">
-                        @csrf @method('PATCH')
-                        <input type="hidden" name="name" :value="tempTitle">
-                        <input type="hidden" name="description" :value="tempDesc">
-                    </form>
                 </div>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     @forelse($album->slides as $photoIdx => $photoItem)
                         <div x-data="{ 
                                 showPhotoModal: false,
-                                photoId: {{ $photoItem->id }},  
                                 localPhotoTitle: '{{ addslashes($photoItem->name) }}',
                                 localPhotoDesc: '{{ addslashes($photoItem->description) }}',
                                 tempPhotoTitle: '{{ addslashes($photoItem->name) }}',
                                 tempPhotoDesc: '{{ addslashes($photoItem->description) }}',
-                                photoActive: {{ $photoItem->is_active ? 'true' : 'false' }},
-
-                               savephotoInfo() {
-                                    this.showPhotoModal = false;
-                                    // Hanapin ang form gamit ang ID na unique bawat photo
-                                    const photoForm = document.getElementById('photo-form-' + this.photoId);
-                                    if (photoForm) {
-                                        photoForm.submit();
-                                    }
-                                }
+                                photoActive: {{ $photoItem->is_active ? 'true' : 'false' }}
                             }"
-                            {{-- Logic para gumana ang search kahit nasa next page --}}
                             x-show="(function() {
                                 const matches = localPhotoTitle.toLowerCase().includes(photoSearch.toLowerCase());
                                 if (!matches) return false;
-                                // Kung may search, ipakita lahat ng match agad. 
-                                // Kung walang search, gamitin ang pagination.
                                 if (photoSearch.trim() !== '') return true;
                                 const idx = {{ $photoIdx + 1 }};
                                 return idx > (photoPage - 1) * photosPerPage && idx <= photoPage * photosPerPage;
                             })()"
                             class="relative bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm group hover:shadow-xl transition-all duration-500">
                             
-                            <form :id="'photo-form-' + photoId" action="{{ route('photo.update', $photoItem->id) }}" method="POST" class="hidden">
-                                @csrf @method('PATCH')
-                                <input type="hidden" name="name" :value="tempPhotoTitle">
-                                <input type="hidden" name="description" :value="tempPhotoDesc"> 
-                            </form>
-
                             <div class="relative aspect-video bg-gray-100 overflow-hidden">
                                 <img src="{{ asset('storage/' . $photoItem->image_path) }}" 
                                     class="w-full h-full object-cover transition-all duration-700" 
@@ -551,23 +514,27 @@
                             </div>
 
                             <template x-teleport="body">
-                                <div x-show="showPhotoModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                                <div x-show="showPhotoModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" x-cloak x-transition>
                                     <div @click.away="showPhotoModal = false" class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
-                                        <h3 class="text-xl font-bold text-gray-900 mb-6 uppercase tracking-tight">Edit Photo Info</h3>
-                                        <div class="space-y-4">
-                                            <div>
-                                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Title</label>
-                                                <input type="text" x-model="tempPhotoTitle" class="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium">
+                                        <h3 class="text-xl font-black text-gray-900 mb-6 uppercase tracking-tight">Edit Photo Info</h3>
+                                        
+                                        <form action="{{ route('photo.update', $photoItem->id) }}" method="POST">
+                                            @csrf @method('PATCH')
+                                            <div class="space-y-4">
+                                                <div>
+                                                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Title</label>
+                                                    <input type="text" name="name" x-model="tempPhotoTitle" class="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 font-bold text-slate-700 outline-none">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Description</label>
+                                                    <textarea name="description" x-model="tempPhotoDesc" rows="3" class="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 text-sm italic outline-none"></textarea>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Description</label>
-                                                <textarea x-model="tempPhotoDesc" rows="3" class="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all font-medium"></textarea>
+                                            <div class="flex gap-3 mt-8">
+                                                <button type="button" @click="showPhotoModal = false" class="flex-1 px-6 py-3 text-[11px] font-black text-gray-400 hover:text-gray-600 transition-colors uppercase">CANCEL</button>
+                                                <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white text-[11px] font-black rounded-xl hover:bg-blue-700 shadow-lg uppercase transition-all">SAVE CHANGES</button>
                                             </div>
-                                        </div>
-                                        <div class="flex gap-3 mt-8">
-                                            <button @click="showPhotoModal = false" class="flex-1 px-6 py-3 text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors">CANCEL</button>
-                                            <button @click="savephotoInfo()" class="flex-1 px-6 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">SAVE CHANGES</button>
-                                        </div>
+                                        </form>
                                     </div>
                                 </div>
                             </template>
@@ -590,20 +557,24 @@
                         <div @click.away="showEditModal = false" class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden">
                             <div class="p-8">
                                 <h3 class="text-xl font-black text-slate-800 uppercase mb-6 tracking-tight">Edit Album Info</h3>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Album Title</label>
-                                        <input type="text" x-model="tempTitle" class="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-bold text-slate-700">
+                                
+                                <form action="{{ route('albums.update', $album->id) }}" method="POST">
+                                    @csrf @method('PATCH')
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Album Title</label>
+                                            <input type="text" name="name" x-model="tempTitle" class="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-bold text-slate-700">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Description</label>
+                                            <textarea name="description" x-model="tempDesc" rows="3" class="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none text-sm italic text-slate-600"></textarea>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Description</label>
-                                        <textarea x-model="tempDesc" rows="3" class="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none text-sm italic text-slate-600"></textarea>
+                                    <div class="mt-8 flex gap-3">
+                                        <button type="button" @click="showEditModal = false" class="flex-1 py-3 text-[11px] font-black text-gray-400 uppercase hover:bg-gray-50 rounded-2xl transition-colors">Cancel</button>
+                                        <button type="submit" class="flex-1 py-3 bg-blue-600 text-white text-[11px] font-black uppercase rounded-2xl shadow-lg hover:bg-blue-700 active:scale-95 transition-all">Save Changes</button>
                                     </div>
-                                </div>
-                                <div class="mt-8 flex gap-3">
-                                    <button @click="showEditModal = false" class="flex-1 py-3 text-[11px] font-black text-gray-400 uppercase hover:bg-gray-50 rounded-2xl transition-colors">Cancel</button>
-                                    <button @click="saveAlbumInfo()" class="flex-1 py-3 bg-blue-600 text-white text-[11px] font-black uppercase rounded-2xl shadow-lg hover:bg-blue-700 active:scale-95 transition-all">Save Changes</button>
-                                </div>
+                                </form>
                             </div>  
                         </div>
                     </div>
