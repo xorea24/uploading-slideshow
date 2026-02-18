@@ -11,11 +11,11 @@ return new class extends Migration
      *
      * @return void
      */
-        public function up() {
+    public function up() {
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->string('key')->unique();
-            $table->string('value');
+            $table->string('transition');
+            $table->integer('duration');
             $table->timestamps();
         });
     }

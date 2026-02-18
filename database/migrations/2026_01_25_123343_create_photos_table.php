@@ -13,12 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('slideshows', function (Blueprint $table) {
+        Schema::create('photos', function (Blueprint $table) {
             $table->id();
-            $table->string('category_name'); // Siguraduhing mayroon nito
-            $table->string('image_path');
+            $table->foreignId('album_id')->references('id')->on('albums');
+            $table->string('name')->unique();
+            $table->text('description');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -29,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('slideshows');
+        Schema::dropIfExists('photos');
     }
 };
