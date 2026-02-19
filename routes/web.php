@@ -33,7 +33,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/upload', [PhotosController::class, 'store'])->name('photos.store');
     // Siguraduhin na 'photos.update' ang name at PATCH ang method
     // Siguraduhin na PATCH ito at tumutugma ang 'photo.update'
-    Route::patch('/photos', [PhotosController::class, 'update'])->name('photo.update');
+    Route::patch('{photo}', [PhotosController::class, 'update'])->name('photos.update');
     Route::get('/photos/{photo}/toggle', [PhotosController::class, 'toggle'])->name('photos.toggle');
     Route::delete('/photos/{photo}', [PhotosController::class, 'destroy'])->name('photos.destroy');
         // 4. DESTROY / DELETE

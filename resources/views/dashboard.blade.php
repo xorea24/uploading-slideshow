@@ -459,14 +459,15 @@
                 </div>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    @forelse($album->slides as $photoIdx => $photoItem)
+                    @forelse($album->slides as $photoIdx => $photo)
                         <div x-data="{ 
                                 showPhotoModal: false,
-                                localPhotoTitle: '{{ addslashes($photoItem->name) }}',
-                                localPhotoDesc: '{{ addslashes($photoItem->description) }}',
-                                tempPhotoTitle: '{{ addslashes($photoItem->name) }}',
-                                tempPhotoDesc: '{{ addslashes($photoItem->description) }}',
-                                photoActive: {{ $photoItem->is_active ? 'true' : 'false' }}
+                                photoId: {{ $photo->id }},
+                                localPhotoTitle: '{{ addslashes($photo->name) }}',
+                                localPhotoDesc: '{{ addslashes($photo->description) }}',
+                                tempPhotoTitle: '{{ addslashes($photo->name) }}',
+                                tempPhotoDesc: '{{ addslashes($photo->description) }}',
+                                photoActive: {{ $photo->is_active ? 'true' : 'false' }}
                             }"
                             x-show="(function() {
                                 const matches = localPhotoTitle.toLowerCase().includes(photoSearch.toLowerCase());
@@ -478,7 +479,7 @@
                             class="relative bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm group hover:shadow-xl transition-all duration-500">
                             
                             <div class="relative aspect-video bg-gray-100 overflow-hidden">
-                                <img src="{{ asset('storage/' . $photoItem->image_path) }}" 
+                                <img src="{{ asset('storage/' . $photo->image_path) }}" 
                                     class="w-full h-full object-cover transition-all duration-700" 
                                     :class="!photoActive ? 'grayscale opacity-40 blur-[1px]' : 'group-hover:scale-110'">
                                 
@@ -500,11 +501,11 @@
                                 </div>
                                 
                                 <div class="flex gap-2">
-                                    <a href="{{ route('photos.toggle', $photoItem->id) }}" 
-                                    class="flex-1 py-1.5 text-center text-[10px] font-black rounded-lg transition-all border {{ $photoItem->is_active ? 'bg-white border-gray-200 text-gray-500' : 'bg-blue-600 border-blue-600 text-white' }}">
-                                        {{ $photoItem->is_active ? 'HIDE' : 'SHOW' }}
+                                    <a href="{{ route('photos.toggle', $photo->id) }}" 
+                                    class="flex-1 py-1.5 text-center text-[10px] font-black rounded-lg transition-all border {{ $photo->is_active ? 'bg-white border-gray-200 text-gray-500' : 'bg-blue-600 border-blue-600 text-white' }}">
+                                        {{ $photo->is_active ? 'HIDE' : 'SHOW' }}
                                     </a>
-                                    <form action="{{ route('photos.destroy', $photoItem->id) }}" method="POST" onsubmit="return confirm('Delete this photo?')" class="flex-shrink-0">
+                                    <form action="{{ route('photos.destroy', $photo->id) }}" method="POST" onsubmit="return confirm('Delete this photo?')" class="flex-shrink-0">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 border border-gray-50 rounded-xl transition-all">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -518,8 +519,9 @@
                                     <div @click.away="showPhotoModal = false" class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
                                         <h3 class="text-xl font-black text-gray-900 mb-6 uppercase tracking-tight">Edit Photo Info</h3>
                                         
-                                        <form action="{{ route('photo.update', $photoItem->id) }}" method="POST">
-                                            @csrf @method('PATCH')
+                                        <form action="{{ route('photos.update', $photo->id) }}" method="POST">
+                                            @csrf
+                                            @method('PATCH')
                                             <div class="space-y-4">
                                                 <div>
                                                     <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Title</label>

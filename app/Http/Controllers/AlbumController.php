@@ -64,7 +64,7 @@ public function upload(Request $request)
         
         return back()
             ->with('status', 'Album updated successfully!')
-            ->with('last_tab', 'manage');
+            ->with('last_tab', 'manage');   
     }
 
     /**
