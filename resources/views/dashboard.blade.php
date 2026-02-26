@@ -1,3 +1,4 @@
+
 <!-- ============================================================ -->
 <!-- ADMIN DASHBOARD - MAYOR'S OFFICE                            -->
 <!-- Photo Management System                                 -->
@@ -268,9 +269,8 @@
                     <p class="text-sm text-gray-500">Add images to your library or create a new collection.</p>
                 </div>
 
-                <form action="{{ route('Photo.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
-                    @csrf
-                    
+               <form action="{{ route('photos.store') }}" method="POST" enctype="multipart/form-data">
+                    @csrf   
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
                         <div class="space-y-2">
                             <label class="block text-[10px] font-black text-blue-900 uppercase tracking-widest">Target Album</label>
@@ -479,7 +479,7 @@
                             class="relative bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm group hover:shadow-xl transition-all duration-500">
                             
                             <div class="relative aspect-video bg-gray-100 overflow-hidden">
-                                <img src="{{ asset('storage/' . $photo->image_path) }}" 
+                                 <img src="{{ Storage::url($photo->image_path) }}" 
                                     class="w-full h-full object-cover transition-all duration-700" 
                                     :class="!photoActive ? 'grayscale opacity-40 blur-[1px]' : 'group-hover:scale-110'">
                                 
@@ -677,8 +677,9 @@
                     @foreach($trashedSlides as $trash)
                         <div class="relative bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden group transition-all hover:border-blue-300">
                             <div class="relative aspect-square overflow-hidden bg-gray-200">
-                                <img src="{{ asset('storage/' . $trash->image_path) }}" 
-                                    class="w-full h-full object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition duration-500 transform group-hover:scale-110">
+                              <img src="{{ Storage::url($photo->image_path) }}" 
+                                    class="w-full h-full object-cover transition-all duration-700" 
+                                    :class="!photoActive ? 'grayscale opacity-40 blur-[1px]' : 'group-hover:scale-110'">
                                 
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             </div>

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\PhotosController;
+use App\Http\Controllers\PhotoController;
 use App\Models\Photo;
 use App\Models\Album;
 use Illuminate\Support\Facades\Route;
@@ -28,14 +28,14 @@ use App\Http\Controllers\AuthController;
 // Ensure this matches the URL in your fetch() 
 Route::middleware(['auth'])->group(function () {
     // DASHBOARD
-    Route::get('/dashboard', [PhotosController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [PhotoController::class, 'index'])->name('dashboard');
     // PHOTO MANAGEMENT
-    Route::post('/upload', [PhotosController::class, 'store'])->name('photos.store');
+    Route::post('/upload', [PhotoController::class, 'store'])->name('photos.store');
     // Siguraduhin na 'photos.update' ang name at PATCH ang method
     // Siguraduhin na PATCH ito at tumutugma ang 'photo.update'
-    Route::patch('{photo}', [PhotosController::class, 'update'])->name('photos.update');
-    Route::get('/photos/{photo}/toggle', [PhotosController::class, 'toggle'])->name('photos.toggle');
-    Route::delete('/photos/{photo}', [PhotosController::class, 'destroy'])->name('photos.destroy');
+    Route::patch('{photo}', [PhotoController::class, 'update'])->name('photos.update');
+    Route::get('/photos/{photo}/toggle', [PhotoController::class, 'toggle'])->name('photos.toggle');
+    Route::delete('/photos/{photo}', [PhotoController::class, 'destroy'])->name('photos.destroy');
         // 4. DESTROY / DELETE
     });
 
@@ -59,11 +59,11 @@ Route::prefix('admin/albums')->middleware('auth')->group(function () {
  * Photo / Photo MANAGEMENT
  */
 Route::prefix('Photo')->middleware('auth')->group(function () {
-    Route::post('/store', [PhotosController::class, 'store'])->name('Photo.store');
-    Route::patch('/{Photo}/toggle', [PhotosController::class, 'toggle'])->name('Photo.toggle');
-    Route::delete('{photo}', [PhotosController::class, 'destroy'])->name('photos.destroy');
-    Route::patch('/{id}/restore', [PhotosController::class, 'restore'])->name('photos.restore');
-    Route::delete('/photos/{id}/force', [PhotosController::class, 'forceDelete'])->name('photos.forceDelete');
+    Route::post('/store', [PhotoController::class, 'store'])->name('Photo.store');
+    Route::patch('/{Photo}/toggle', [PhotoController::class, 'toggle'])->name('Photo.toggle');
+    Route::delete('{photo}', [PhotoController::class, 'destroy'])->name('photos.destroy');
+    Route::patch('/{id}/restore', [PhotoController::class, 'restore'])->name('photos.restore');
+    Route::delete('/photos/{id}/force', [PhotoController::class, 'forceDelete'])->name('photos.forceDelete');
 });
 
 /**

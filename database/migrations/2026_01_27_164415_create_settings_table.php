@@ -12,12 +12,12 @@ return new class extends Migration
      * @return void
      */
         public function up() {
-        Schema::create('settings', function (Blueprint $table) {
-            $table->id();
-            $table->string('key')->unique();
-            $table->string('value');
-            $table->timestamps();
-        });
+      Schema::create('settings', function (Blueprint $table) {
+        $table->id();
+        $table->string('key')->unique();
+        $table->text('value')->nullable(); // Ito ang mahalagang column para sa slideshow!
+        $table->timestamps();
+    });
     }
 
     /**
